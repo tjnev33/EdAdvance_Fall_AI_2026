@@ -1,0 +1,1651 @@
+<title>The Stress Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a test lab. A dark test-rig header runs a live scan on a sample AI answer; below, a test-sequence rail and white test sheets over graph paper, one stage at a time. Single deliberate light-lab look with a dark instrument header, colors set explicitly. */
+:root{
+  color-scheme:light;
+  --bg:#ECEEEA; --grid:#DDE1DC; --surface:#FFFFFF; --sunken:#F3F4F1; --board:#E6E9E4; --dot:#C6CCC6;
+  --ink:#12161B; --ink-2:#3A424B; --ink-3:#646E78; --line:#CFD5D8; --line-2:#9AA3AA;
+  --rig:#0A0D11; --rig-2:#12171D; --rig-line:#262E37; --rig-ink:#DDE3E8; --rig-dim:#7D8893;
+  --orange:#F05A0E; --orange-2:#FF7A33; --orange-soft:#FDE8DB; --hazard:#F2C300;
+  --human:#1D8049; --human-soft:#DDF0E3; --on-human:#FFFFFF;
+  --volume:#2C5EAD; --volume-soft:#E2EAF6; --mistakes:#C8232D; --mistakes-soft:#F8E0E1;
+  --bias:#A36A00; --bias-soft:#F7EBD0; --syco:#7440B0; --syco-soft:#EEE5F8; --fit:#56606B; --fit-soft:#E6E9EC;
+  --pass:#1D8049; --pass-hi:#3DDC84; --partial:#D09200; --fail:#C8232D; --fail-hi:#FF5A5F; --flag-hi:#FFC53D; --retest:#2C5EAD;
+  --mark:#FFE58C; --mark-ink:#3F3100; --pin:#12161B; --shadow:0 1px 0 rgba(18,22,27,.05);
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:2px; --r-sm:2px;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;text-wrap:balance;font-weight:600}
+p{margin:0}
+a{color:var(--ink);text-underline-offset:3px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.mono{font-family:var(--f-mono)}
+.wrap{max-width:86rem;margin:0 auto;padding-inline:clamp(16px,3vw,32px)}
+
+/* ===== test-rig header ===== */
+.lab{background:var(--rig);color:var(--rig-ink);position:relative;overflow:hidden}
+.lab::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+.lab::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;background:repeating-linear-gradient(-45deg,var(--hazard) 0 14px,var(--rig) 14px 28px)}
+.lab-grid{position:relative;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.15fr);gap:clamp(24px,4vw,56px);align-items:center;padding-block:clamp(28px,4.5vw,56px) calc(clamp(28px,4.5vw,56px) + 10px)}
+.proto{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--rig-dim);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.led{width:9px;height:9px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 3px rgba(240,90,14,.22),0 0 12px rgba(240,90,14,.7);animation:led 1.4s ease-in-out infinite}
+@keyframes led{50%{opacity:.35}}
+.lab h1{font-family:var(--f-display);font-stretch:125%;font-weight:900;font-size:clamp(3rem,7.4vw,6.2rem);line-height:.86;letter-spacing:-.015em;text-transform:uppercase;margin-top:16px}
+.lab h1 span{display:block;color:transparent;-webkit-text-stroke:2px var(--orange);text-stroke:2px var(--orange)}
+.lab .sub{font-size:clamp(1.02rem,1.5vw,1.18rem);color:#C4CCD3;max-width:32rem;margin-top:18px}
+.lab .sub b{color:#fff}
+.lab-meta{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:6px 28px;margin:24px 0 0;font-size:.86rem}
+.lab-meta dt{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--rig-dim)}
+.lab-meta dd{margin:2px 0 0;color:#EEF2F5}
+@media (max-width:640px){.lab-meta{grid-template-columns:1fr 1fr}}
+
+.rig{background:var(--rig-2);border:1px solid var(--rig-line);box-shadow:0 30px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);min-width:0}
+.rig-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rig-line);font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--rig-dim)}
+.rig-bar .rec{display:inline-flex;align-items:center;gap:7px;color:#FF8A5B}
+.rig-bar .rec i{width:7px;height:7px;border-radius:50%;background:var(--orange);animation:led 1s ease-in-out infinite}
+.rig-bar .rec.idle{color:var(--rig-dim)}.rig-bar .rec.idle i{animation:none;background:var(--rig-dim)}
+.rig-body{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.rig-out{position:relative;padding:18px 20px 20px;border-bottom:1px solid var(--rig-line)}
+.rig-q{font-family:var(--f-mono);font-size:.76rem;color:var(--rig-dim);margin-bottom:10px}
+.rig-q b{color:#AAB4BD;font-weight:500}
+.rig-a{font-size:1.02rem;line-height:1.95;color:#E6EBEF}
+.claim{position:relative;border-radius:2px;transition:background-color .35s ease,box-shadow .35s ease,color .35s;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:1px 0}
+.claim sup{display:none;font-family:var(--f-mono);font-size:.58rem;font-weight:600;margin-left:3px;padding:1px 4px;border-radius:2px;opacity:0;transition:opacity .3s;vertical-align:.6em;color:var(--rig)}
+.claim.pass{background:rgba(61,220,132,.12);box-shadow:inset 0 -2px 0 var(--pass-hi)}
+.claim.flag{background:rgba(255,197,61,.13);box-shadow:inset 0 -2px 0 var(--flag-hi)}
+.claim.fail{background:rgba(255,90,95,.15);box-shadow:inset 0 -2px 0 var(--fail-hi)}
+.claim.pass sup,.claim.flag sup,.claim.fail sup{opacity:1;display:inline}
+.claim.pass sup{background:var(--pass-hi)}.claim.flag sup{background:var(--flag-hi)}.claim.fail sup{background:var(--fail-hi)}
+.scanline{position:absolute;left:0;right:0;top:0;height:2px;background:var(--orange-2);box-shadow:0 0 14px 3px rgba(255,122,51,.55),0 0 60px 10px rgba(255,122,51,.12);opacity:0;transition:top .55s cubic-bezier(.5,0,.3,1),opacity .3s;pointer-events:none}
+.scanline.on{opacity:1}
+.rig-log{list-style:none;margin:0;padding:12px 16px;font-family:var(--f-mono);font-size:.74rem;line-height:1.5;min-height:9.6rem;display:flex;flex-direction:column;gap:4px}
+.rig-log li{display:grid;grid-template-columns:4.2rem 4.4rem 3.6rem minmax(0,1fr);gap:8px;align-items:baseline;color:#AEB8C1;animation:logIn .3s ease both}
+@keyframes logIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.rig-log .t{color:var(--rig-dim)}
+.rig-log .s{font-weight:600}
+.rig-log .s.pass{color:var(--pass-hi)}.rig-log .s.flag{color:var(--flag-hi)}.rig-log .s.fail{color:var(--fail-hi)}
+.rig-log .d{color:#D5DCE2;overflow-wrap:anywhere}
+@media (max-width:520px){.rig-log li{grid-template-columns:3.4rem 3.4rem minmax(0,1fr)}.rig-log .t{display:none}}
+.rig-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--rig-line)}
+.verdict-line{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--rig-dim)}
+.verdict-line .req{color:#fff;border:1.5px solid var(--orange);padding:4px 10px;box-shadow:0 0 0 0 rgba(240,90,14,.5)}
+.verdict-line.done .req{animation:req 1.6s ease-in-out infinite}
+@keyframes req{50%{box-shadow:0 0 0 6px rgba(240,90,14,0);background:rgba(240,90,14,.16)}}
+.replay{border:1px solid var(--rig-line);background:transparent;color:var(--rig-ink);font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px}
+.replay:hover{border-color:var(--orange);color:#fff}
+.rig-cap{font-family:var(--f-mono);font-size:.66rem;color:var(--rig-dim);letter-spacing:.06em;margin-top:8px}
+@media (max-width:900px){.lab-grid{grid-template-columns:1fr}}
+
+/* ===== shell ===== */
+.shell{display:grid;grid-template-columns:17.5rem minmax(0,1fr);gap:28px;align-items:start;padding-block:28px 64px}
+.rail{position:sticky;top:16px;background:var(--surface);border:1px solid var(--ink)}
+.rail-h{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:12px 16px;border-bottom:1px solid var(--ink);display:flex;justify-content:space-between;background:var(--ink);color:#fff}
+.rail-h span:last-child{color:var(--orange-2)}
+.rail ol{list-style:none;margin:0;padding:0}
+.stage{width:100%;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;padding:12px 16px;display:grid;grid-template-columns:3.1rem 1fr auto;gap:8px;align-items:center}
+.rail li:last-child .stage{border-bottom:0}
+.stage:hover{background:var(--sunken)}
+.stage .code{font-family:var(--f-mono);font-size:.76rem;font-weight:600;color:var(--ink-3)}
+.stage .nm{font-weight:600;font-size:.93rem;line-height:1.25;display:flex;flex-direction:column}
+.stage .nm small{font-family:var(--f-mono);font-weight:400;font-size:.68rem;color:var(--ink-3);letter-spacing:.04em;margin-top:2px}
+.stage .st{width:12px;height:12px;border-radius:50%;border:2px solid var(--line-2)}
+.stage.is-seen .st{background:var(--pass);border-color:var(--pass)}
+.stage.is-on{background:var(--orange-soft);box-shadow:inset 4px 0 0 var(--orange)}
+.stage.is-on .code{color:var(--orange)}
+.stage.is-on .st{border-color:var(--orange);background:var(--orange);box-shadow:0 0 0 4px rgba(240,90,14,.25);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{box-shadow:0 0 0 7px rgba(240,90,14,.06)}}
+.rail-meter{padding:12px 16px;border-top:1px solid var(--ink);display:flex;flex-direction:column;gap:6px}
+.rail-meter span{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);display:flex;justify-content:space-between}
+.rail-meter .bar{height:6px;background:var(--sunken);border:1px solid var(--line-2)}
+.rail-meter .bar i{display:block;height:100%;background:var(--orange);width:0;transition:width .5s ease}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr;gap:18px}
+  .rail{position:sticky;top:0;z-index:20;overflow-x:auto}
+  .rail-h,.rail-meter{display:none}
+  .rail ol{display:flex;min-width:max-content}
+  .stage{border-bottom:0;border-right:1px solid var(--line);grid-template-columns:auto auto;padding:10px 14px}
+  .stage .st,.stage .nm small{display:none}.stage .nm{font-size:.85rem;white-space:nowrap}
+}
+
+/* ---------- sections ---------- */
+main{padding-block:36px 72px}
+.sec{display:flex;flex-direction:column;gap:22px}
+@media (prefers-reduced-motion:no-preference){.sec{animation:rise .35s ease-out both}@keyframes rise{from{opacity:.001;transform:translateY(8px)}to{opacity:1;transform:none}}}
+.sec-head{display:flex;flex-direction:column;gap:10px;max-width:46rem}
+.eyebrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.eyebrow .time{font-family:var(--f-mono);letter-spacing:0;text-transform:none;font-weight:400;padding:2px 8px;border:1px solid var(--line);border-radius:999px}
+.sec h2{font-family:var(--f-display);font-weight:400;font-size:clamp(2.2rem,4.6vw,3.3rem);line-height:1;letter-spacing:-.005em}
+.sec h2 em{font-style:italic}
+.lead{font-size:1.1rem;color:var(--ink-2);max-width:44rem}
+.sec h3{font-size:1.15rem}
+.muted{color:var(--ink-3)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+
+/* framing */
+.arc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.arc-step{padding:20px 22px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);position:relative}
+.arc-step:last-child{border-right:0;background:var(--human-soft)}
+.arc-verb{font-family:var(--f-display);font-size:1.9rem;line-height:1}
+.arc-step:last-child .arc-verb{color:var(--human);font-style:italic}
+.arc-step p{color:var(--ink-2);font-size:.95rem}
+.arc-who{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.arc-step:last-child .arc-who{color:var(--human)}
+@media (max-width:700px){.arc{grid-template-columns:1fr}.arc-step{border-right:0;border-bottom:1px solid var(--line)}.arc-step:last-child{border-bottom:0}}
+
+.risks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.risks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.risks{grid-template-columns:1fr}}
+.risk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.risk h4{font-size:1rem;display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.dot[data-r="volume"]{background:var(--volume)}.dot[data-r="mistakes"]{background:var(--mistakes)}.dot[data-r="bias"]{background:var(--bias)}.dot[data-r="syco"]{background:var(--syco)}.dot[data-r="fit"]{background:var(--fit)}.dot[data-r="ok"]{background:var(--human)}
+.risk p{font-size:.92rem;color:var(--ink-2)}
+.risk .ask{font-size:.86rem;color:var(--ink-3);border-top:1px solid var(--line);padding-top:8px;margin-top:auto}
+
+.premium{background:var(--ink);color:var(--bg);border-radius:var(--r);padding:clamp(22px,3vw,34px);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:center}
+.premium .kicker{color:var(--line-2)}
+.premium blockquote{margin:10px 0 0;font-family:var(--f-display);font-size:clamp(1.5rem,2.6vw,2.05rem);line-height:1.15}
+.premium blockquote em{color:var(--human-soft);font-style:italic}
+@media (max-width:800px){.premium{grid-template-columns:1fr}}
+.meter{display:flex;flex-direction:column;gap:10px}
+.meter-row{display:grid;grid-template-columns:7.5rem 1fr;gap:12px;align-items:center;font-size:.88rem}
+.meter-row b{font-weight:600}
+.meter-row span{opacity:.75}
+.bars{display:flex;gap:3px}
+.bars i{height:8px;flex:1;border-radius:2px;background:currentColor;opacity:.18}
+.bars i.on{opacity:1}
+.meter-cap{font-size:.8rem;opacity:.7}
+@media (max-width:420px){.meter-row{grid-template-columns:1fr}}
+
+/* steps */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;counter-reset:s}
+.step{counter-increment:s;position:relative;padding:0 0 28px 52px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.step::before{content:counter(s);position:absolute;left:0;top:-2px;width:32px;height:32px;border-radius:50%;background:var(--surface);border:1.5px solid var(--ink);display:grid;place-items:center;font-weight:700;font-size:.9rem}
+.step::after{content:"";position:absolute;left:15.5px;top:34px;bottom:4px;width:1px;background:var(--line-2)}
+.step:last-child::after{display:none}
+.step-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.step-h h3{font-size:1.15rem}
+.mins{font-family:var(--f-mono);font-size:.75rem;color:var(--ink-3)}
+.step > p{color:var(--ink-2);max-width:42rem}
+.step.human::before{background:var(--human);border-color:var(--human);color:var(--on-human)}
+.human-tag{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--human);background:var(--human-soft);padding:2px 8px;border-radius:999px}
+
+/* document on a board */
+.doc-board{background-color:var(--board);background-image:radial-gradient(var(--dot) 1px,transparent 1.1px);background-size:18px 18px;border:1px solid var(--line);border-radius:16px;padding:clamp(16px,3vw,28px)}
+.paper{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);padding:clamp(18px,3vw,30px);max-width:48rem;margin-inline:auto}
+.paper::before{content:"";position:absolute;top:-6px;left:50%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;background:var(--pin)}
+.src-prompt{font-size:.88rem;color:var(--ink-3);padding-bottom:14px;margin-bottom:16px;border-bottom:1px dashed var(--line-2)}
+.src-prompt b{display:block;color:var(--ink-2);font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.doc{display:flex;flex-direction:column;gap:6px;font-size:.96rem}
+.doc .d-title{font-family:var(--f-display);font-size:1.6rem;line-height:1.1;font-weight:400}
+.doc .d-meta{color:var(--ink-3);font-size:.88rem;margin-bottom:6px}
+.doc .d-h{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:12px}
+.doc .d-claim{font-style:italic;margin-top:10px}
+.u{border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background-color .15s}
+.flaggable .u{cursor:pointer}
+.flaggable .u:hover{background:var(--sunken)}
+.u.flag{background:var(--mark);color:var(--mark-ink)}
+.flaggable .u.flag:hover{background:var(--mark)}
+.u.ann{background-repeat:no-repeat;background-size:100% 2px;background-position:0 100%;padding-bottom:1px}
+.u.ann[data-r="mistakes"]{background-image:linear-gradient(var(--mistakes),var(--mistakes))}
+.u.ann[data-r="bias"]{background-image:linear-gradient(var(--bias),var(--bias))}
+.u.ann[data-r="volume"]{background-image:linear-gradient(var(--volume),var(--volume))}
+.u.ann[data-r="syco"]{background-image:linear-gradient(var(--syco),var(--syco))}
+.u.ann[data-r="fit"]{background-image:linear-gradient(var(--fit),var(--fit))}
+.u.ann[data-r="ok"]{background-image:linear-gradient(var(--human),var(--human))}
+.u sup{font-family:var(--f-mono);font-size:.62rem;font-weight:500;margin-left:2px;padding:0 4px;border-radius:999px;color:var(--surface);vertical-align:.5em}
+.flag-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;max-width:48rem;margin:12px auto 0;font-size:.88rem;color:var(--ink-3)}
+.flag-count b{color:var(--ink)}
+.chat{display:flex;flex-direction:column;gap:14px}
+.bub{max-width:40rem;padding:12px 16px;border-radius:14px;font-size:.96rem}
+.bub-s{align-self:flex-end;background:var(--sunken);border-bottom-right-radius:4px;color:var(--ink-2)}
+.who{display:block;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.bub-a{padding:0}
+
+/* inputs */
+.field{display:flex;flex-direction:column;gap:6px;max-width:42rem}
+.field > span{font-size:.92rem;font-weight:600}
+textarea,input[type=text],select{width:100%;font:inherit;font-size:.95rem;padding:10px 12px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--ink)}
+textarea{resize:vertical;min-height:4.2rem}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--volume);outline-offset:0;border-color:transparent}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);font-size:.92rem;font-weight:500;cursor:pointer;user-select:none}
+.pill input{position:absolute;opacity:0;pointer-events:none}
+.pill:has(input:checked),.pill.is-on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill:has(input:focus-visible){outline:2px solid var(--volume);outline-offset:2px}
+.pill .ck{width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;display:inline-grid;place-items:center;flex:none}
+.pill:has(input:checked) .ck::after,.pill.is-on .ck::after{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.human-pills .pill:has(input:checked){background:var(--human);border-color:var(--human);color:var(--on-human)}
+.add-crit{display:flex;gap:8px;max-width:30rem}
+.add-crit input{flex:1}
+
+/* prompt */
+.prompt{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden;max-width:48rem;min-width:0}
+.prompt-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px 10px 16px;border-bottom:1px solid var(--line);background:var(--sunken)}
+.prompt-kind{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.prompt-text{margin:0;padding:14px 16px;font-family:var(--f-mono);font-size:.8rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:16rem;overflow:auto;color:var(--ink-2)}
+.prompt-text mark{background:var(--human-soft);color:var(--ink);border-radius:3px;padding:0 2px}
+.prompt-text .ph{color:var(--mistakes)}
+.btn{border:0;border-radius:999px;padding:8px 16px;font-weight:600;font-size:.86rem;background:var(--ink);color:var(--bg);display:inline-flex;gap:6px;align-items:center}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.done{background:var(--human);color:var(--on-human)}
+.btn-ghost{border:1px solid var(--line-2);background:transparent;color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.86rem}
+.btn-ghost.danger{color:var(--mistakes);border-color:var(--mistakes)}
+
+/* choose-one reflection cards */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,19rem),1fr));gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s}
+.q-btn{border:0;background:none;text-align:left;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;font-weight:600;font-size:1rem;line-height:1.35}
+.q-btn .ck{margin-top:3px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line-2);flex:none;display:grid;place-items:center}
+.q.is-open{border-color:var(--ink);box-shadow:var(--shadow)}
+.q.is-open .q-btn .ck{background:var(--ink);border-color:var(--ink)}
+.q.is-open .q-btn .ck::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--bg)}
+.q textarea{margin:0 18px 18px;width:calc(100% - 36px)}
+.choose-note{display:flex;gap:10px;align-items:center;font-size:.92rem;color:var(--ink-2)}
+.choose-note b{color:var(--ink)}
+
+/* reveal */
+.reveal{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.reveal-top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px 20px}
+.reveal-top h3{font-size:1.05rem}
+.reveal-top p{font-size:.88rem;color:var(--ink-3)}
+.reveal-body{border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0}
+.reveal-body .doc-board{border:0;border-radius:0;border-right:1px solid var(--line)}
+.findings{list-style:none;margin:0;padding:20px;display:flex;flex-direction:column;gap:12px;counter-reset:f}
+.findings li{display:grid;grid-template-columns:auto 1fr;gap:10px;font-size:.92rem;color:var(--ink-2)}
+.findings li b{color:var(--ink);font-weight:600}
+.fnum{font-family:var(--f-mono);font-size:.7rem;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:var(--surface);margin-top:1px}
+.fnum[data-r="mistakes"],.u sup[data-r="mistakes"]{background:var(--mistakes)}
+.fnum[data-r="bias"],.u sup[data-r="bias"]{background:var(--bias)}
+.fnum[data-r="volume"],.u sup[data-r="volume"]{background:var(--volume)}
+.fnum[data-r="syco"],.u sup[data-r="syco"]{background:var(--syco)}
+.fnum[data-r="fit"],.u sup[data-r="fit"]{background:var(--fit)}
+.fnum[data-r="ok"],.u sup[data-r="ok"]{background:var(--human)}
+.findings .found{font-size:.72rem;font-weight:700;color:var(--human);letter-spacing:.06em;text-transform:uppercase;margin-left:6px}
+.score{padding:14px 20px;background:var(--sunken);font-size:.92rem;border-top:1px solid var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 20px 16px;font-size:.78rem;color:var(--ink-3)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:860px){.reveal-body{grid-template-columns:1fr}.reveal-body .doc-board{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* gradual release map */
+.release{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.release-head{padding:18px 20px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line)}
+.release-scroll{overflow-x:auto}
+.rtable{width:100%;border-collapse:collapse;min-width:40rem;font-size:.88rem}
+.rtable th,.rtable td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.rtable thead th{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--sunken)}
+.rtable thead th.now{color:var(--ink)}
+.rtable tbody th{font-weight:600;width:34%}
+.rtable tbody th small{display:block;font-weight:400;color:var(--ink-3);font-size:.8rem}
+.rtable tr:last-child td,.rtable tr:last-child th{border-bottom:0}
+.own{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.own-ai{background:var(--volume-soft);color:var(--volume)}
+.own-menu{background:var(--bias-soft);color:var(--bias)}
+.own-you{background:var(--human-soft);color:var(--human)}
+.rtable td.now{background:color-mix(in srgb,var(--sunken) 60%,transparent)}
+.release-key{display:flex;flex-wrap:wrap;gap:8px 16px;padding:14px 20px;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-3)}
+
+/* field kit */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters .lab{font-size:.85rem;color:var(--ink-3);margin-right:4px}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.chip.is-on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kit{display:grid;grid-template-columns:minmax(0,21rem) minmax(0,1fr);gap:20px;align-items:start}
+.kit-list{list-style:none;margin:0;padding:6px;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.kit-item{border:0;background:none;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r-sm);display:grid;grid-template-columns:2rem 1fr auto;gap:8px;align-items:center}
+.kit-item:hover{background:var(--sunken)}
+.kit-item.is-on{background:var(--ink);color:var(--bg)}
+.kit-item .kn{font-family:var(--f-mono);font-size:.78rem;color:var(--ink-3)}
+.kit-item.is-on .kn{color:var(--line-2)}
+.kit-item .kname{font-weight:600;font-size:.93rem;line-height:1.25}
+.kit-item .kdots{display:flex;gap:3px}
+.kit-item .kdots .dot{width:7px;height:7px}
+.today{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--human);display:block;margin-top:2px}
+.kit-item.is-on .today{color:var(--human-soft)}
+.kit-detail{position:sticky;top:96px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,2.5vw,28px);display:flex;flex-direction:column;gap:14px;min-width:0}
+.kd-num{font-family:var(--f-mono);font-size:.8rem;color:var(--ink-3)}
+.kit-detail h3{font-family:var(--f-display);font-weight:400;font-size:2rem;line-height:1.05}
+.kd-desc{color:var(--ink-2)}
+.kd-when{background:var(--sunken);border-radius:var(--r-sm);padding:10px 14px;font-size:.92rem}
+.kd-lenses{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--ink-3)}
+.kd-lenses span{display:inline-flex;gap:6px;align-items:center}
+.toggle{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px}
+.toggle button{border:0;background:none;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:600;color:var(--ink-3)}
+.toggle button.is-on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.kd-mode{font-size:.85rem;color:var(--ink-3)}
+@media (max-width:820px){.kit{grid-template-columns:1fr}.kit-detail{position:static}}
+
+/* closing */
+.closing{font-family:var(--f-display);font-size:clamp(1.8rem,3.6vw,2.6rem);line-height:1.1;max-width:40rem}
+.closing em{color:var(--human)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px}
+.panel h3{font-size:1.05rem}
+.all-notes{font-family:var(--f-mono);font-size:.8rem;min-height:9rem}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.contact{font-size:.92rem;color:var(--ink-2);display:flex;flex-direction:column;gap:2px}
+.sel{user-select:all;font-family:var(--f-mono);font-size:.86rem;color:var(--ink)}
+
+.pager{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;border-top:1px solid var(--line);padding-top:20px;margin-top:10px}
+.pg{border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:9px 16px;font-weight:600;font-size:.9rem}
+.pg-next{background:var(--ink);color:var(--bg);border-color:var(--ink);margin-left:auto}
+.foot{font-size:.8rem;color:var(--ink-3);padding-block:0 32px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+/* ===== test sheets ===== */
+main{padding-block:0}
+.sec{background:var(--surface);border:1px solid var(--ink);padding:clamp(20px,3.4vw,42px);position:relative}
+.sec::before,.sec::after{content:"";position:absolute;width:16px;height:16px;border-color:var(--orange);border-style:solid}
+.sec::before{top:-1px;left:-1px;border-width:3px 0 0 3px}
+.sec::after{bottom:-1px;right:-1px;border-width:0 3px 3px 0}
+.sheet-id{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-bottom:12px;border-bottom:1px dashed var(--line-2)}
+.sheet-id b{color:var(--orange);font-weight:600}
+.sec h2{font-family:var(--f-display);font-stretch:115%;font-weight:850;font-size:clamp(2.1rem,4.4vw,3.3rem);line-height:.96;letter-spacing:-.012em}
+.sec h2 em{font-style:normal;color:var(--orange)}
+.lead{color:var(--ink-2)}
+.sec h3{font-family:var(--f-display);font-stretch:108%;font-weight:750}
+.brief{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));border:1px solid var(--line-2);margin:0}
+.brief div{padding:10px 14px;border-right:1px solid var(--line);min-width:0}
+.brief div:last-child{border-right:0}
+.brief dt{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.brief dd{margin:2px 0 0;font-weight:600;font-size:.92rem}
+@media (max-width:600px){.brief div{border-right:0;border-bottom:1px solid var(--line)}.brief div:last-child{border-bottom:0}}
+
+/* live progress readout */
+.readout{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;background:var(--ink);color:#fff;padding:12px 16px}
+.readout .rk{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#9AA5AF}
+.readout .segs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.readout .seg{height:30px;border:1px solid #39424C;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;color:#6F7A85;transition:all .35s ease;padding:0 4px;text-align:center;line-height:1.1}
+.readout .seg.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.readout .seg.last.on{background:var(--pass);border-color:var(--pass)}
+.readout .pct{font-family:var(--f-display);font-stretch:120%;font-weight:850;font-size:1.5rem;font-variant-numeric:tabular-nums;min-width:4ch;text-align:right}
+@media (max-width:640px){.readout{grid-template-columns:1fr auto}.readout .segs{grid-column:1/-1;grid-row:2}.readout .seg{font-size:0;height:10px}}
+
+/* pipeline / figure / failure modes / levels */
+.pipe{display:grid;grid-template-columns:1fr auto 1fr auto 1.1fr;align-items:stretch}
+.pipe .node{border:1px solid var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.pipe .node .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.pipe .node b{font-family:var(--f-display);font-stretch:120%;font-weight:850;font-size:1.55rem;text-transform:uppercase;line-height:1}
+.pipe .node p{font-size:.92rem;color:var(--ink-2)}
+.pipe .node.you{background:var(--ink);color:#fff}
+.pipe .node.you .k{color:var(--orange-2)}
+.pipe .node.you p{color:#CDD3D8}
+.pipe .arr{display:grid;place-items:center;padding:0 8px;color:var(--ink-3);font-family:var(--f-mono)}
+@media (max-width:760px){.pipe{grid-template-columns:1fr}.pipe .arr{padding:4px 0;transform:rotate(90deg)}}
+.curve-wrap{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:center;border:1px solid var(--line-2);padding:18px}
+.curve-wrap svg{width:100%;height:auto;display:block}
+.curve-wrap .cap h4{font-family:var(--f-display);font-stretch:112%;font-weight:800;font-size:1.4rem;line-height:1.1}
+.curve-wrap .cap p{color:var(--ink-2);font-size:.94rem;margin-top:8px}
+.cv-axis{stroke:var(--ink);stroke-width:1.5;fill:none}.cv-grid{stroke:var(--line);stroke-width:1}
+.cv-a{stroke:var(--pass);stroke-width:3;fill:none;stroke-linecap:round}.cv-b{stroke:var(--fail);stroke-width:3;fill:none;stroke-linecap:round}
+.cv-t{font-family:var(--f-mono);font-size:11px;fill:var(--ink-3)}.cv-l{font-family:var(--f-body);font-size:12.5px;font-weight:600}
+@media (prefers-reduced-motion:no-preference){.cv-a,.cv-b{stroke-dasharray:700;stroke-dashoffset:700;animation:drawc 1.8s .3s ease-out forwards}.cv-b{animation-delay:.6s}@keyframes drawc{to{stroke-dashoffset:0}}}
+@media (max-width:760px){.curve-wrap{grid-template-columns:1fr}}
+.fm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--ink)}
+.fm-card{padding:16px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px;min-width:0}
+.fm-card:last-child{border-right:0}
+.fm-card .code{font-family:var(--f-mono);font-size:.68rem;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.fm-card h4{font-family:var(--f-display);font-stretch:110%;font-weight:800;font-size:1.2rem;line-height:1.1}
+.fm-card p{font-size:.88rem;color:var(--ink-2)}
+.fm-card .tq{font-size:.86rem;border-top:1px dashed var(--line-2);padding-top:8px;margin-top:auto;color:var(--ink)}
+.fm-card .tq b{font-family:var(--f-mono);font-size:.64rem;letter-spacing:.1em;color:var(--ink-3);display:block}
+@media (max-width:900px){.fm{grid-template-columns:repeat(2,minmax(0,1fr))}.fm-card:nth-child(2){border-right:0}.fm-card:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (max-width:480px){.fm{grid-template-columns:1fr}.fm-card{border-right:0;border-bottom:1px solid var(--line)}}
+.tol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);border:1px solid var(--ink)}
+.tol-q{background:var(--ink);color:#fff;padding:22px}
+.tol-q .k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--orange-2)}
+.tol-q blockquote{margin:10px 0 0;font-family:var(--f-display);font-stretch:108%;font-weight:700;font-size:1.32rem;line-height:1.2}
+.tl-row{display:grid;grid-template-columns:10.5rem 1fr;gap:6px 14px;padding:12px 18px;border-bottom:1px solid var(--line);align-items:center}
+.tl-row:last-child{border-bottom:0}
+.tl-row b{font-family:var(--f-mono);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+.tl-row .gauge{height:10px;background:var(--sunken);border:1px solid var(--line-2);position:relative}
+.tl-row .gauge i{position:absolute;inset:0 auto 0 0;background:var(--orange)}
+.tl-row span{font-size:.85rem;color:var(--ink-2);grid-column:2}
+@media (max-width:760px){.tol{grid-template-columns:1fr}.tl-row{grid-template-columns:1fr}.tl-row span{grid-column:1}}
+
+/* base overrides */
+.step::before{border-radius:0;border:1.5px solid var(--ink);font-family:var(--f-mono);background:var(--surface)}
+.step::after{background:var(--line-2)}
+.step.is-done::before{background:var(--ink);color:#fff;content:"✓"}
+.step.human::before{background:var(--orange);border-color:var(--orange);color:#fff}
+.human-tag{color:#fff;background:var(--orange);border-radius:0;font-family:var(--f-mono)}
+.step-h h3{font-size:1.28rem}
+.doc-board{background-color:var(--board);border:1px solid var(--line-2);border-radius:0}
+.paper{border-radius:0;border:1px solid var(--line-2);box-shadow:4px 4px 0 rgba(18,22,27,.08)}
+.paper::before{display:none}
+.doc .d-title{font-family:var(--f-display);font-stretch:108%;font-weight:750;font-size:1.45rem}
+.btn{border-radius:0;background:var(--ink);font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.06em;font-size:.76rem;padding:9px 14px}
+.btn.done{background:var(--pass)}
+.btn-ghost{border-radius:0;font-family:var(--f-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em}
+.pill{border-radius:0;font-size:.9rem}
+.pill:has(input:checked),.pill.is-on{background:var(--ink);border-color:var(--ink)}
+.prompt{border-radius:0;border-color:var(--ink)}
+.prompt-bar{background:var(--ink);border-bottom-color:var(--ink)}
+.prompt-kind{font-family:var(--f-mono);letter-spacing:.1em;color:#9AA5AF}
+.prompt-bar .btn{background:var(--orange)}
+.prompt-bar .btn:disabled{background:#3A424B;opacity:1;color:#9AA5AF}
+.prompt-bar .btn.done{background:var(--pass)}
+.prompt-text mark{background:var(--orange-soft)}
+textarea,input[type=text],select{border-radius:0}
+.q,.reveal,.release,.kit-list,.kit-detail,.panel{border-radius:0;border-color:var(--ink)}
+.q.is-open{border-color:var(--orange);box-shadow:none}
+.q.is-open .q-btn .ck{background:var(--orange);border-color:var(--orange)}
+.q-btn .ck{border-radius:0}
+.chip{border-radius:0;font-family:var(--f-mono);font-size:.76rem}
+.chip.is-on{background:var(--ink)}
+.kit-item{border-radius:0}
+.kit-item.is-on{background:var(--ink)}
+.kit-item .kname{display:block}
+.korig{display:block;font-size:.74rem;color:var(--ink-3);font-weight:400;margin-top:1px}
+.kit-item.is-on .korig{color:#A9B2BA}
+.kit-detail{top:16px}
+.kit-detail h3{font-family:var(--f-display);font-stretch:118%;font-weight:900;font-size:2.2rem;text-transform:uppercase;line-height:.95}
+.kd-num{font-family:var(--f-mono);color:var(--orange);text-transform:uppercase;letter-spacing:.06em;font-size:.74rem}
+.toggle{border-radius:0}.toggle button{border-radius:0}
+.rtable thead th{font-family:var(--f-mono)}
+.own{border-radius:0;font-family:var(--f-mono);font-size:.72rem;font-weight:500}
+.closing{font-family:var(--f-display);font-stretch:115%;font-weight:850}
+.closing em{font-style:normal;color:var(--orange)}
+.pager{border-top:1px dashed var(--line-2)}
+.pg{border-radius:0;font-family:var(--f-mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+.pg-next{background:var(--orange);border-color:var(--orange);color:#fff}
+.score{font-family:var(--f-mono);font-size:.84rem}
+
+/* criteria results */
+.spec-table{border:1px solid var(--ink);max-width:48rem}
+.sr-row{display:grid;grid-template-columns:4.5rem minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.sr-id{font-family:var(--f-mono);font-size:.74rem;color:var(--ink-3)}
+.sr-name{font-weight:600;font-size:.93rem}
+.seg3{display:inline-flex;border:1px solid var(--ink)}
+.seg3 label{position:relative;padding:6px 11px;font-family:var(--f-mono);font-size:.72rem;font-weight:600;letter-spacing:.06em;cursor:pointer;border-right:1px solid var(--ink);transition:background .2s}
+.seg3 label:last-child{border-right:0}
+.seg3 label:hover{background:var(--sunken)}
+.seg3 input{position:absolute;opacity:0;pointer-events:none}
+.seg3 label:has(input:focus-visible){outline:2px solid var(--orange);outline-offset:1px}
+.seg3 label:has(input[value=PASS]:checked){background:var(--pass);color:#fff}
+.seg3 label:has(input[value=PARTIAL]:checked){background:var(--partial);color:#1C1400}
+.seg3 label:has(input[value=FAIL]:checked){background:var(--fail);color:#fff}
+.sr-sum{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;padding:10px 14px;background:var(--ink);color:#fff;font-family:var(--f-mono);font-size:.76rem}
+.sr-bar{flex:1 1 10rem;display:flex;height:8px;background:#2A323B;min-width:8rem}
+.sr-bar i{display:block;height:100%;transition:width .4s ease}
+.sr-empty{padding:14px;color:var(--ink-3);font-size:.9rem}
+@media (max-width:560px){.sr-row{grid-template-columns:1fr}.sr-id{display:none}}
+
+/* sign-off + tag */
+.signoff{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:32px;align-items:center;max-width:54rem}
+@media (max-width:760px){.signoff{grid-template-columns:1fr}}
+.verdicts{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px}
+.verdict{position:relative;border:1.5px solid var(--ink);padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:2px;background:var(--surface);transition:transform .15s}
+.verdict:hover{transform:translateY(-2px)}
+.verdict input{position:absolute;opacity:0;pointer-events:none}
+.verdict b{font-family:var(--f-display);font-stretch:120%;font-weight:900;font-size:1.12rem;letter-spacing:.02em}
+.verdict span{font-size:.8rem;color:var(--ink-3)}
+.verdict:has(input:focus-visible){outline:2px solid var(--orange);outline-offset:2px}
+.verdict[data-v=use]:has(input:checked){background:var(--pass);border-color:var(--pass);color:#fff}
+.verdict[data-v=modify]:has(input:checked){background:var(--partial);border-color:var(--partial);color:#1C1400}
+.verdict[data-v=retest]:has(input:checked){background:var(--retest);border-color:var(--retest);color:#fff}
+.verdict[data-v=dnu]:has(input:checked){background:var(--fail);border-color:var(--fail);color:#fff}
+.verdict:has(input:checked) span{color:inherit;opacity:.9}
+.op{display:flex;gap:10px;align-items:center;max-width:22rem}
+.op label{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.op input{max-width:7rem;text-transform:uppercase;font-family:var(--f-mono)}
+.tag-hold{position:relative;padding-top:34px;display:flex;justify-content:center}
+.tag-hold svg.string{position:absolute;top:0;left:50%;margin-left:-40px;overflow:visible}
+.tag{--c:var(--line-2);width:min(17.5rem,100%);background:var(--ink);border:0;clip-path:polygon(18% 0,82% 0,100% 11%,100% 100%,0 100%,0 11%);padding:40px 18px 18px;position:relative;transform:rotate(-2.5deg);transform-origin:50% 0}
+.tag::before{content:"";position:absolute;top:14px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1.5px var(--ink),0 0 0 4px var(--orange-soft)}
+.tag.swing{animation:swing .8s ease}
+@keyframes swing{0%{transform:rotate(-2.5deg)}25%{transform:rotate(5deg)}55%{transform:rotate(-4.5deg)}80%{transform:rotate(1deg)}100%{transform:rotate(-2.5deg)}}
+.tag .tk{font-family:var(--f-mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-align:center}
+.tag .band{margin:10px -18px;padding:12px 10px;background:var(--c);color:#fff;text-align:center;font-family:var(--f-display);font-stretch:120%;font-weight:900;font-size:1.3rem;letter-spacing:.03em;line-height:1.05;text-transform:uppercase}
+.tag[data-s=none] .band{background:repeating-linear-gradient(-45deg,#E7E9E6 0 8px,#F3F4F1 8px 16px);color:var(--ink-3)}
+.tag[data-s=modify] .band{color:#1C1400}
+.tag dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.8rem}
+.tag dt{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:2px}
+.tag dd{margin:0;font-weight:600;border-bottom:1px solid var(--line);min-height:1.2em}
+.tag .sig{font-family:var(--f-mono);text-transform:uppercase}
+.tag .stampmark{position:absolute;right:12px;bottom:14px;font-family:var(--f-display);font-stretch:120%;font-weight:900;font-size:.9rem;letter-spacing:.08em;color:var(--c);border:2.5px solid var(--c);padding:3px 8px;transform:rotate(-14deg);opacity:0;text-transform:uppercase}
+.tag.stamped .stampmark{opacity:.9}
+.tag.slam .stampmark{animation:slam .45s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes slam{0%{transform:rotate(-14deg) scale(2.4);opacity:0}60%{opacity:1}100%{transform:rotate(-14deg) scale(1);opacity:.9}}
+
+/* animated inspection */
+.reveal-body .doc-board{position:relative;overflow:hidden}
+.scan2{position:absolute;left:0;right:0;height:2px;background:var(--orange);box-shadow:0 0 14px 3px rgba(240,90,14,.45);top:0;opacity:0;pointer-events:none;z-index:3}
+.inspecting .scan2{opacity:1;transition:top .45s linear}
+.inspecting .u.ann{background-size:0 2px;transition:background-size .35s ease}
+.inspecting .u sup{opacity:0}
+.inspecting .u.ann.lit{background-size:100% 2px}
+.u.ann.lit{animation:hit .5s ease}
+@keyframes hit{0%{background-color:rgba(240,90,14,.35)}100%{background-color:transparent}}
+.inspecting .u.lit sup{opacity:1;transition:opacity .2s}
+.inspecting .findings li{opacity:.15}
+.findings li{transition:opacity .35s}
+.inspecting .findings li.lit{opacity:1}
+.inspecting .score{opacity:0}
+.score{transition:opacity .4s}
+
+/* test-level dials */
+.dialbox{background:var(--rig);color:var(--rig-ink);border:1px solid var(--rig);position:relative;overflow:hidden}
+.dialbox::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+.dial-head{position:relative;padding:22px 24px 8px;display:flex;flex-direction:column;gap:6px}
+.dial-head .k,.dial-out .k,.premium-box .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--orange-2)}
+.dial-head h3{font-family:var(--f-display);font-stretch:118%;font-weight:850;font-size:clamp(1.5rem,2.8vw,2rem);line-height:1;color:#fff}
+.dial-head p{color:#AEB8C1;font-size:.94rem;max-width:40rem}
+.dials{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:8px 10px 18px}
+.dial{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 14px;min-width:0;border-right:1px solid var(--rig-line)}
+.dial:last-child{border-right:0}
+.dial-lbl{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:#fff;display:flex;gap:8px;align-items:center}
+.dial-lbl span{color:var(--orange-2)}
+.knob{width:148px;height:148px;display:block}
+.knob .tick{stroke:#4A5560;stroke-width:2;stroke-linecap:round;transition:stroke .3s}
+.knob .tick.on{stroke:var(--orange-2)}
+.knob .ring{fill:none;stroke:#2B333C;stroke-width:6}
+.knob .body{fill:url(#knobg);stroke:#3A444F;stroke-width:1.5}
+.knob .ridge{fill:none;stroke:#0C1014;stroke-width:3;stroke-dasharray:1.5 4.2;opacity:.8}
+.knob .ptr{transition:transform .6s cubic-bezier(.3,1.5,.5,1);transform-origin:70px 70px}
+.knob .ptr line{stroke:var(--orange-2);stroke-width:4;stroke-linecap:round}
+.knob .ptr circle{fill:var(--orange-2)}
+.knob .cap{fill:#1A2027;stroke:#2F3842}
+.opts{display:flex;flex-direction:column;gap:4px;width:100%;max-width:15rem}
+.opt{border:1px solid var(--rig-line);background:transparent;color:#C4CCD3;text-align:left;padding:7px 10px;font-size:.86rem;line-height:1.25;display:flex;flex-direction:column;gap:1px;transition:all .2s}
+.opt small{font-family:var(--f-mono);font-size:.64rem;color:var(--rig-dim);letter-spacing:.02em}
+.opt:hover{border-color:#4A5560;color:#fff}
+.opt[aria-checked=true]{border-color:var(--orange);background:rgba(240,90,14,.14);color:#fff}
+.opt[aria-checked=true] small{color:#FFB48A}
+@media (max-width:820px){.dials{grid-template-columns:1fr}.dial{border-right:0;border-bottom:1px solid var(--rig-line);flex-direction:row;flex-wrap:wrap;justify-content:center;gap:12px 20px}.dial-lbl{width:100%;justify-content:center}.knob{width:120px;height:120px}.opts{max-width:14rem}}
+.dial-out{position:relative;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);border-top:1px solid var(--rig-line);background:var(--rig-2)}
+.do-l{padding:20px 24px;border-right:1px solid var(--rig-line);display:flex;flex-direction:column;gap:8px}
+.do-level{font-family:var(--f-display);font-stretch:122%;font-weight:900;font-size:clamp(1.8rem,3.4vw,2.5rem);line-height:.95;text-transform:uppercase;color:#fff}
+.do-meter{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:16rem}
+.do-meter i{height:10px;background:#2B333C;transition:background .4s}
+.do-meter i.on{background:var(--orange)}
+.do-meter.full i.on{background:var(--fail-hi)}
+.do-why{font-size:.88rem;color:#AEB8C1}
+.do-why b{color:#fff;font-weight:600}
+.do-r{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+.do-desc{font-size:1rem;color:#fff}
+.do-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.do-list li{display:grid;grid-template-columns:1.2rem 1fr;gap:6px;font-size:.9rem;color:#C4CCD3}
+.do-list li::before{content:"▸";color:var(--orange-2)}
+.do-tests{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--rig-dim)}
+.do-tests button{border:1px solid #3A444F;background:transparent;color:#fff;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.04em;padding:5px 9px}
+.do-tests button:hover{border-color:var(--orange);background:rgba(240,90,14,.14)}
+.dial-out.swap .do-level{animation:flick .45s ease}
+@keyframes flick{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+@media (max-width:760px){.dial-out{grid-template-columns:1fr}.do-l{border-right:0;border-bottom:1px solid var(--rig-line)}}
+.premium-box{background:var(--orange);color:#fff;padding:clamp(22px,3.4vw,40px);position:relative;overflow:hidden}
+.premium-box .k{color:#FFE2CF}
+.premium-box blockquote{margin:12px 0 0;font-family:var(--f-display);font-stretch:112%;font-weight:800;font-size:clamp(1.5rem,3vw,2.3rem);line-height:1.08;max-width:44rem}
+.premium-box blockquote em{font-style:normal;color:var(--ink)}
+.premium-box::after{content:"";position:absolute;right:-40px;bottom:-40px;width:200px;height:200px;border:28px solid rgba(255,255,255,.12);border-radius:50%}
+
+/* briefing frames */
+#s0 > .pager{display:none}
+.fstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.fseg{border:0;background:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:7px;min-width:0}
+.fseg i{display:block;height:6px;background:var(--line);transition:background .3s}
+.fseg span{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fseg span b{color:var(--ink-3);font-weight:600}
+.fseg:hover i{background:var(--line-2)}
+.fseg.is-done i{background:var(--ink)}
+.fseg.is-on i{background:var(--orange)}
+.fseg.is-on span,.fseg.is-on span b{color:var(--ink)}
+@media (max-width:640px){.fseg span{font-size:0}.fseg span b{font-size:.7rem}}
+.frames{position:relative;min-height:22rem}
+.frame{display:flex;flex-direction:column;gap:22px}
+.frame.in{animation:fin .62s cubic-bezier(.6,0,.3,1) both}
+@keyframes fin{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.fwipe{position:absolute;top:-6px;bottom:-6px;left:0;width:3px;background:var(--orange);box-shadow:0 0 18px 4px rgba(240,90,14,.45);opacity:0;pointer-events:none;z-index:4}
+.fwipe.go{animation:wipe .62s cubic-bezier(.6,0,.3,1) both}
+@keyframes wipe{0%{left:0;opacity:1}90%{opacity:1}100%{left:100%;opacity:0}}
+.fnav{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px dashed var(--line-2);padding-top:18px}
+.fnav .pg-next{margin-left:auto}
+.fcount{font-family:var(--f-mono);font-size:.8rem;letter-spacing:.1em;color:var(--ink-3);white-space:nowrap}
+.fnav #f-prev{white-space:nowrap}
+@media (max-width:480px){.fcount{display:none}}
+@media (prefers-reduced-motion:reduce){.frame.in,.fwipe.go{animation:none}}
+.frame[data-f="3"]{min-height:24rem;justify-content:center}
+.frame[data-f="3"] .premium-box{padding:clamp(32px,6vw,72px) clamp(24px,5vw,64px)}
+.frame[data-f="3"] .premium-box blockquote{font-size:clamp(1.9rem,4.2vw,3.3rem);max-width:52rem}
+.frame[data-f="3"] .premium-box::after{width:320px;height:320px;right:-80px;bottom:-110px;border-width:40px}
+
+
+/* criteria-test brief + prompt card + spacing */
+.brief3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.brief3 div{padding:14px 18px;display:flex;flex-direction:column;gap:4px}
+.brief3 dt{display:flex;gap:8px;align-items:center}
+.brief3 dt span{color:var(--orange);font-weight:600}
+.brief3 dd{font-family:var(--f-display);font-stretch:115%;font-weight:850;font-size:1.35rem;line-height:1.05;margin-top:4px}
+.brief3 p{font-size:.86rem;color:var(--ink-2)}
+@media (max-width:700px){.brief3{grid-template-columns:1fr}.brief3 div{border-right:0;border-bottom:1px solid var(--line)}.brief3 div:last-child{border-bottom:0}}
+.ask-card{max-width:46rem;border:1px solid var(--ink);border-left:6px solid var(--orange);background:var(--sunken);padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+.ask-k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.ask-q{font-size:1.15rem;line-height:1.5;color:var(--ink)}
+.readout .segs.segs6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.steps .step{padding-bottom:60px;gap:16px}
+.steps .step:last-child{padding-bottom:8px}
+.steps .step::after{bottom:14px}
+.sec{gap:30px}
+
+.tag::after{content:"";position:absolute;inset:1.5px;background:#FFFCF2;clip-path:polygon(18% 0,82% 0,100% 11%,100% 100%,0 100%,0 11%);z-index:0}
+.tag > :not(.stampmark){position:relative;z-index:1}
+.tag .stampmark{z-index:2}
+.tag::before{z-index:3}
+.verdict{justify-content:center;min-height:6.2rem}
+.tag-hold{padding-top:30px}
+.tag{padding-bottom:50px}
+.tag .stampmark{bottom:12px}
+
+/* review: collaborative reflection */
+.discuss{border:1px solid var(--ink);display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+.discuss-h{background:var(--ink);color:#fff;padding:24px;display:flex;flex-direction:column;gap:8px}
+.discuss-h .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--orange-2)}
+.discuss-h h3{font-family:var(--f-display);font-stretch:115%;font-weight:850;font-size:clamp(1.5rem,2.6vw,2rem);line-height:1.02;color:#fff}
+.discuss-h p{color:#C4CCD3;font-size:.95rem}
+.dq{list-style:none;margin:0;padding:0;counter-reset:dq;display:flex;flex-direction:column}
+.dq li{counter-increment:dq;display:grid;grid-template-columns:3rem 1fr;gap:12px;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);font-size:1.08rem;font-weight:600;line-height:1.35}
+.dq li:last-child{border-bottom:0}
+.dq li::before{content:"0" counter(dq);font-family:var(--f-mono);font-size:.85rem;font-weight:600;color:var(--orange);border:1.5px solid var(--orange);width:2.4rem;height:2.4rem;display:grid;place-items:center}
+@media (max-width:760px){.discuss{grid-template-columns:1fr}}
+#sr1 .reveal-top .btn{background:var(--orange);padding:12px 18px;font-size:.82rem}
+#sr1 .reveal-top h3{font-size:1.2rem}
+.pills-col{flex-direction:column;align-items:flex-start}
+#sr2 .reveal-top .btn{background:var(--orange);padding:12px 18px;font-size:.82rem}
+#sr2 .reveal-top h3{font-size:1.2rem}
+
+/* test library orientation */
+.anatomy{border:1px solid var(--ink)}
+.an-h{background:var(--ink);padding:10px 16px}
+.an-h .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--orange-2)}
+.an-grid{display:grid;grid-template-columns:1fr 1fr 1.2fr 1.6fr}
+.an-c{padding:14px 16px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;min-width:0}
+.an-c:last-child{border-right:0}
+.an-c b{font-family:var(--f-display);font-stretch:112%;font-weight:800;font-size:1.02rem}
+.an-c p{font-size:.86rem;color:var(--ink-2)}
+.an-c em{font-style:normal;font-weight:700;color:var(--ink)}
+.an-tags{display:flex;flex-direction:column;gap:3px;font-size:.84rem;color:var(--ink-2)}
+.an-tags span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.an-tags .dot{width:8px;height:8px}
+.an-two{background:var(--orange-soft)}
+@media (max-width:900px){.an-grid{grid-template-columns:1fr 1fr}.an-c:nth-child(2){border-right:0}.an-c:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (max-width:520px){.an-grid{grid-template-columns:1fr}.an-c{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* your next test */
+.next-what{max-width:40rem}
+.next-what input{font-size:1.05rem;padding:12px 14px}
+#dial-out2{position:relative;border-top:1px solid var(--rig-line)}
+.tc{background:#FFFCF2;color:var(--ink);margin:18px;border:1.5px solid var(--ink);box-shadow:8px 8px 0 rgba(0,0,0,.35)}
+.tc-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;background:var(--orange);color:#fff;padding:10px 18px;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
+.tc-top .k{color:#fff;font-weight:600}
+.tc-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+.tc-l{padding:20px 22px;border-right:1.5px dashed var(--line-2);display:flex;flex-direction:column;gap:8px}
+.tc-r{padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.tc-label{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.tc-what{font-family:var(--f-display);font-stretch:112%;font-weight:850;font-size:1.5rem;line-height:1.1;margin-bottom:6px}
+.tc-pas{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 10px;font-size:.88rem}
+.tc-pas div{display:contents}
+.tc-pas dt{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);padding-top:2px}
+.tc-pas dd{margin:0;font-weight:600}
+.tc .do-level{color:var(--ink)}
+.tc .do-meter i{background:var(--line)}
+.tc .do-meter i.on{background:var(--orange)}
+.tc .do-meter.full i.on{background:var(--fail)}
+.tc-desc{font-size:.9rem;color:var(--ink-2)}
+.tc-test{border:1px solid var(--line-2);padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.tc-th{display:flex;gap:12px;align-items:center}
+.tc-n{font-family:var(--f-mono);font-size:.78rem;font-weight:600;color:var(--orange);border:1.5px solid var(--orange);width:2rem;height:2rem;display:grid;place-items:center;flex:none}
+.tc-th b{font-family:var(--f-display);font-stretch:112%;font-weight:800;font-size:1.1rem;display:block;line-height:1.1}
+.tc-th small{font-size:.76rem;color:var(--ink-3)}
+.tc-test p{font-size:.86rem;color:var(--ink-2)}
+.tc-act{display:flex;flex-wrap:wrap;gap:8px}
+.tc-copy{border:0;background:var(--ink);color:#fff;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px}
+.tc-copy.done{background:var(--pass)}
+.tc-open{border:1px solid var(--ink);background:transparent;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:7px 11px}
+.tc-pre{margin:0;padding:10px;background:var(--sunken);font-family:var(--f-mono);font-size:.74rem;white-space:pre-wrap;max-height:10rem;overflow:auto}
+.tc-sign{font-size:.88rem;color:var(--ink-2);border-top:1px dashed var(--line-2);padding-top:10px}
+.tc-sign b{color:var(--ink)}
+#dial-out2.swap .tc{animation:flick .45s ease}
+@media (max-width:760px){.tc-body{grid-template-columns:1fr}.tc-l{border-right:0;border-bottom:1.5px dashed var(--line-2)}.tc{margin:12px}}
+.contact-strip{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;font-size:.9rem;color:var(--ink-2);border-top:1px dashed var(--line-2);padding-top:16px}
+.contact-strip .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--orange)}
+</style>
+
+<header class="lab">
+  <div class="wrap lab-grid">
+    <div>
+      <p class="proto"><span class="led"></span>Test it before you use it · Participant guide</p>
+      <h1>The Stress<span>Test</span></h1>
+      <p class="sub"><b>Beyond Prompting:</b> Teaching AI Verification as a Durable Skill. Every AI output is a draft until someone tests it.</p>
+      <dl class="lab-meta">
+        <div><dt>Site</dt><dd>EdAdvance Fall AI Conference, Litchfield CT</dd></div>
+        <div><dt>Date</dt><dd class="mono">02 OCT 2026</dd></div>
+        <div><dt>Test leads</dt><dd>TJ Neville &amp; Andy Marshall, FPS</dd></div>
+      </dl>
+    </div>
+    <div>
+      <div class="rig" aria-label="Live test run on a sample AI answer">
+        <div class="rig-bar"><span>Test rig · sample AI answer</span><span class="rec" id="rig-rec"><i></i><span id="rig-state">Running</span></span></div>
+        <div class="rig-body">
+          <div class="rig-out" id="rig-out">
+            <div class="scanline" id="scanline"></div>
+            <p class="rig-q"><b>Prompt:</b> Is homework good for middle schoolers? I think it really helps.</p>
+            <p class="rig-a"><span class="claim" data-c="0">You're absolutely right!<sup>01</sup></span> <span class="claim" data-c="1">Homework is one of the most widely used tools in middle school.<sup>02</sup></span> <span class="claim" data-c="2">It raises achievement for every student,<sup>03</sup></span> <span class="claim" data-c="3">with a 2021 Stanford review finding a 31% gain in test scores.<sup>04</sup></span> <span class="claim" data-c="4">It also builds responsibility, time management, family engagement, study skills, perseverance and independence.<sup>05</sup></span></p>
+          </div>
+          <ol class="rig-log" id="rig-log" aria-live="off"></ol>
+        </div>
+        <div class="rig-foot"><div class="verdict-line" id="rig-verdict"><span id="rig-tally">0 of 5 claims checked</span></div><button class="replay" id="rig-replay">↻ Run test again</button></div>
+      </div>
+      <p class="rig-cap">Sample answer written for this guide. The citation in claim 04 is invented on purpose.</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap shell">
+  <nav class="rail" aria-label="Test sequence">
+    <div class="rail-h"><span>Test sequence</span><span id="rail-count">1 / 7</span></div>
+    <ol>
+      <li><button class="stage" data-go="s0" data-nav="s0"><span class="code">T-00</span><span class="nm">Briefing<small>WHY WE TEST</small></span><span class="st"></span></button></li>
+      <li><button class="stage" data-go="s1" data-nav="s1"><span class="code">T-01</span><span class="nm">Criteria test<small>EXPERIENCE 1</small></span><span class="st"></span></button></li>
+      <li><button class="stage" data-go="sr1" data-nav="sr1"><span class="code">R-01</span><span class="nm">Table debrief #1<small>DISCUSS</small></span><span class="st"></span></button></li>
+      <li><button class="stage" data-go="s2" data-nav="s2"><span class="code">T-02</span><span class="nm">Student test<small>EXPERIENCE 2</small></span><span class="st"></span></button></li>
+      <li><button class="stage" data-go="sr2" data-nav="sr2"><span class="code">R-02</span><span class="nm">Table debrief #2<small>DISCUSS</small></span><span class="st"></span></button></li>
+      <li><button class="stage" data-go="slib" data-nav="slib"><span class="code">LIB</span><span class="nm">Test library<small>12 TESTS</small></span><span class="st"></span></button></li>
+      <li><button class="stage" data-go="suse" data-nav="suse"><span class="code">USE</span><span class="nm">Your next test<small>CLOSING</small></span><span class="st"></span></button></li>
+    </ol>
+  </nav>
+
+  <main id="main">
+
+  <!-- T-00 -->
+  <section class="sec" id="s0" data-sec data-title="Briefing">
+    <div class="sheet-id"><span><b>T-00</b> · Briefing</span><span></span></div>
+    <div class="fstrip" role="tablist" aria-label="Briefing frames">
+      <button class="fseg is-on" role="tab" data-frame="0" aria-selected="true"><i></i><span><b>01</b> Why we test</span></button>
+      <button class="fseg" role="tab" data-frame="1" aria-selected="false"><i></i><span><b>02</b> How AI output fails</span></button>
+      <button class="fseg" role="tab" data-frame="2" aria-selected="false"><i></i><span><b>03</b> How hard to test</span></button>
+      <button class="fseg" role="tab" data-frame="3" aria-selected="false"><i></i><span><b>04</b> The Human Premium</span></button>
+    </div>
+    <div class="frames" id="frames"><span class="fwipe" aria-hidden="true"></span>
+<div class="frame" data-f="0" role="tabpanel">
+<div class="sec-head">
+      <h2>Every AI output is a <em>draft.</em></h2>
+      <p class="lead">Verification is the testing that decides whether an AI output is ready to use. That goes well beyond finding errors: it asks whether the output holds up for your purpose, your audience and your stakes.</p>
+    </div>
+    <div class="pipe">
+      <div class="node"><span class="k">AI can help</span><b>Build</b><p>Write a lesson or an email, code a website, build an interactive, design a rubric.</p></div>
+      <div class="arr">→</div>
+      <div class="node"><span class="k">AI can help</span><b>Test</b><p>Question the output and investigate its claims.</p></div>
+      <div class="arr">→</div>
+      <div class="node you"><span class="k">Only you</span><b>Sign off</b><p>Use, modify, retest or do not use.</p></div>
+    </div>
+    <div class="curve-wrap">
+      <svg viewBox="0 0 440 250" role="img" aria-label="Two outputs under increasing testing. One holds and is cleared; the other looks the same at first, then fails.">
+        <line class="cv-grid" x1="50" y1="60" x2="420" y2="60"/><line class="cv-grid" x1="50" y1="120" x2="420" y2="120"/><line class="cv-grid" x1="50" y1="180" x2="420" y2="180"/>
+        <path class="cv-axis" d="M50 20 V210 H425"/>
+        <text class="cv-t" x="50" y="232">GLANCE</text><text class="cv-t" x="200" y="232">SPOT CHECK</text><text class="cv-t" x="345" y="232">FULL TEST</text>
+        <text class="cv-t" x="22" y="40" transform="rotate(-90 22 40)" text-anchor="end">HOLDS UP</text>
+        <path class="cv-a" d="M52 190 C 110 120, 150 84, 210 72 S 330 60, 415 56"/>
+        <path class="cv-b" d="M52 190 C 110 118, 150 86, 205 76 C 240 72, 258 90, 272 150 L 282 205"/>
+        <circle cx="415" cy="56" r="5" fill="#1D8049"/><text class="cv-l" x="410" y="44" text-anchor="end" fill="#1D8049">Ready to use</text>
+        <path d="M276 196 l12 -8 m-12 0 l12 8" stroke="#C8232D" stroke-width="2.5"/><text class="cv-l" x="292" y="196" fill="#C8232D">Fails under testing</text>
+        <text class="cv-l" x="104" y="168" fill="#3A424B">Both look the same here</text>
+      </svg>
+      <div class="cap"><h4>Looks can be deceiving.</h4><p>Two AI outputs can look similar at a glance. The difference only shows up once you test them: checking claims, measuring against criteria, asking what's missing.</p></div>
+    </div>
+    </div>
+<div class="frame" data-f="1" role="tabpanel" hidden>
+<h3>Four ways AI output fails</h3>
+    <div class="fm">
+      <div class="fm-card"><span class="code">Failure 1 <span class="dot" data-r="volume"></span></span><h4>Volume</h4><p>More output than anyone can realistically check. Length and polish hide gaps.</p><p class="tq"><b>TEST QUESTION</b>What actually matters for how I'll use it?</p></div>
+      <div class="fm-card"><span class="code">Failure 2 <span class="dot" data-r="mistakes"></span></span><h4>Hallucinations &amp; mistakes</h4><p>Confident claims, dates, quotes or sources that are wrong or invented.</p><p class="tq"><b>TEST QUESTION</b>Could I confirm this somewhere independent?</p></div>
+      <div class="fm-card"><span class="code">Failure 3 <span class="dot" data-r="bias"></span></span><h4>Bias</h4><p>One-sided framing, missing perspectives, assumptions presented as fact.</p><p class="tq"><b>TEST QUESTION</b>Whose view is centered, and whose is missing?</p></div>
+      <div class="fm-card"><span class="code">Failure 4 <span class="dot" data-r="syco"></span></span><h4>Sycophancy</h4><p>The AI agrees with you or tells you what you hoped to hear.</p><p class="tq"><b>TEST QUESTION</b>Would it say the same if I'd asked the opposite?</p></div>
+    </div>
+</div>
+<div class="frame" data-f="2" role="tabpanel" hidden>
+<div class="dialbox" id="dialbox">
+      <div class="dial-head"><span class="k">Test settings</span><h3>How hard should you test it?</h3><p>Think of something you'd actually make with AI. Set the three dials and the panel recommends a test level.</p></div>
+      <div class="dials" id="dials"></div>
+      <div class="dial-out" id="dial-out" aria-live="polite"></div>
+    </div>
+    </div>
+<div class="frame" data-f="3" role="tabpanel" hidden>
+<div class="premium-box"><span class="k">The Human Premium</span><blockquote>AI can help find what deserves testing. <em>Evidence and human judgment decide what's ready to use.</em></blockquote></div>
+
+  </div>
+</div>
+    <div class="fnav"><button class="pg" id="f-prev" hidden>← Back</button><span class="fcount" id="f-count">01 / 04</span><button class="pg pg-next" id="f-next">Next →</button></div>
+</section>
+
+  <!-- T-01 -->
+  <section class="sec" id="s1" data-sec data-title="Criteria test" hidden>
+    <div class="sheet-id"><span><b>T-01</b> · Criteria test · Criteria Check</span><span>Experience 1</span></div>
+    <div class="sec-head">
+      <h2>Does it pass <em>your criteria?</em></h2>
+      <p class="lead">You know what a good lesson looks like, so you set the criteria. AI tests its own work against them. You read the results and sign off.</p>
+    </div>
+    <dl class="brief brief3">
+      <div><dt><span>01</span>Purpose</dt><dd>Plan a lesson</dd><p>A Grade 8 social studies lesson on the causes of the American Revolution</p></div>
+      <div><dt><span>02</span>Audience</dt><dd>Students</dd><p>A colleague's Grade 8 class, next week</p></div>
+      <div><dt><span>03</span>Stakes</dt><dd>Medium</dd><p>One 45-minute class period of learning</p></div>
+    </dl>
+    <div class="readout" data-readout="1"><span class="rk">Test progress</span><div class="segs segs6"><span class="seg">Prompt</span><span class="seg">Criteria</span><span class="seg">Inspect</span><span class="seg">Run</span><span class="seg">Review</span><span class="seg last">Sign off</span></div><span class="pct">0%</span></div>
+    <ol class="steps" data-steps="1">
+      <li class="step">
+        <div class="step-h"><h3>Review the prompt</h3></div>
+        <p>Start with what was asked for. An output can only be judged against the request behind it.</p>
+        <div class="ask-card"><span class="ask-k">Your colleague's prompt</span><p class="ask-q">“Create an engaging 45-minute lesson plan for 8th graders on the causes of the American Revolution. Include primary sources.”</p></div>
+        <div class="pills"><label class="pill"><input type="checkbox" value="Reviewed" data-k="c1-prompt" data-label="T-01 · Reviewed the prompt"><span class="ck"></span>I've reviewed the prompt</label></div>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Set the criteria</h3></div>
+        <p>Choose three to five criteria this lesson has to meet. They load straight into the test prompt.</p>
+        <div class="pills" id="crit-pills"></div>
+        <div class="add-crit"><input type="text" id="crit-new" placeholder="Add your own criterion" aria-label="Add your own criterion"><button class="btn-ghost" id="crit-add">Add</button></div>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Inspect it</h3></div>
+        <p>Here is what the AI produced. Tap any sentence that looks like a possible problem. Tap again to clear it. You'll compare your flags with a full inspection later.</p>
+        <div class="doc-board"><div class="paper">
+          
+          <div class="doc flaggable" id="lesson-doc"></div>
+        </div><div class="flag-bar"><span class="flag-count" id="lesson-count"></span><button class="btn-ghost" data-clearflags="lesson">Clear flags</button></div></div>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Run the test</h3></div>
+        <p>Paste this into any AI chatbot. It asks the AI to test its own lesson plan against your criteria and show its evidence.</p>
+        <div class="prompt"><div class="prompt-bar"><span class="prompt-kind">Criteria test prompt</span><button class="btn" data-copy="c1" id="copy-c1">Copy prompt</button></div><pre class="prompt-text" id="c1-prompt"></pre></div>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Review the results</h3></div>
+        <p>Read the criteria test report the AI generated. Treat the AI's report as evidence, not the verdict. Based on the report, mark each criterion pass, partial or fail.</p>
+        <div class="spec-table" id="spec-results"></div>
+      </li>
+      <li class="step human">
+        <div class="step-h"><h3>Sign off</h3><span class="human-tag">Human decision</span></div>
+        <p>Based on your review of the report, what happens to this lesson?</p>
+        <div class="signoff">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="verdicts" role="radiogroup" aria-label="Sign-off decision">
+              <label class="verdict" data-v="use"><input type="radio" name="c1-call" value="Use" data-k="c1-call" data-label="T-01 · Sign-off"><b>USE</b><span>Ready to teach as is</span></label>
+              <label class="verdict" data-v="modify"><input type="radio" name="c1-call" value="Modify" data-k="c1-call"><b>MODIFY</b><span>Teach it after specific changes</span></label>
+              <label class="verdict" data-v="retest"><input type="radio" name="c1-call" value="Retest" data-k="c1-call"><b>RETEST</b><span>Not enough evidence yet</span></label>
+              <label class="verdict" data-v="dnu"><input type="radio" name="c1-call" value="Do not use" data-k="c1-call"><b>DO NOT USE</b><span>Fails where it matters</span></label>
+            </div>
+          </div>
+          <div class="tag-hold"><svg class="string" width="80" height="40" aria-hidden="true"><path d="M0 0 Q 40 30 40 44 Q 40 30 80 0" fill="none" stroke="#9AA3AA" stroke-width="1.5"/></svg>
+            <div class="tag" id="tag-c1" data-s="none" aria-live="polite"><p class="tk">Inspection tag · T-01</p><div class="band" data-band>Awaiting sign-off</div>
+              <dl><dt>Tested</dt><dd>Lesson plan · Gr 8</dd><dt>Criteria</dt><dd data-specs>—</dd><dt>Signed by</dt><dd>You</dd><dt>Date</dt><dd class="mono">02 OCT 2026</dd></dl><span class="stampmark" data-stamp>OK</span></div>
+          </div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- R-01 -->
+  <section class="sec" id="sr1" data-sec data-title="Table debrief #1" hidden>
+    <div class="sheet-id"><span><b>R-01</b> · Table debrief #1</span><span></span></div>
+    <div class="sec-head"><h2>How did <em>you do?</em></h2><p class="lead">Before you reflect on the experience, check your work. Run the full inspection and see which problems you flagged.</p></div>
+    <div class="reveal">
+      <div class="reveal-top"><div><h3>Full inspection · the lesson plan</h3><p>Scan the lesson plan for every problem. Your flags stay highlighted.</p></div><button class="btn" data-reveal="lesson" aria-expanded="false">Run full inspection</button></div>
+      <div class="reveal-panel" hidden><div class="reveal-body"><div class="doc-board"><span class="scan2"></span><div class="paper"><div class="doc" id="lesson-ann"></div></div></div><ol class="findings" id="lesson-findings"></ol></div><div class="legend" id="lesson-legend"></div><p class="score" id="lesson-score"></p></div>
+    </div>
+    <div class="discuss">
+      <div class="discuss-h"><span class="k">Reflect with your table</span><h3>What did the test tell you?</h3><p>Pick one or two of these to discuss with your group.</p></div>
+      <ol class="dq">
+        <li>What did the AI's test catch that you might have missed?</li>
+        <li>What could the test not decide for you?</li>
+        <li>What did you check outside the AI's own report?</li>
+        <li>Where could the testing itself give you a false pass?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- T-02 -->
+  <section class="sec" id="s2" data-sec data-title="Student test" hidden>
+    <div class="sheet-id"><span><b>T-02</b> · Student test · Build a Verification Plan</span><span>Experience 2</span></div>
+    <div class="sec-head">
+      <h2>First run: <em>AI drafts the test plan.</em></h2>
+      <p class="lead">You're a 7th grader who hasn't learned to design tests yet. This first time, AI drafts the plan. You check that it makes sense, run one test yourself and sign off.</p>
+    </div>
+    <dl class="brief brief3">
+      <div><dt><span>01</span>Purpose</dt><dd>Explain a science idea</dd><p>A paragraph on why Earth has seasons</p></div>
+      <div><dt><span>02</span>Audience</dt><dd>My teacher</dd><p>A 7th-grade student (you) turning it in for science class</p></div>
+      <div><dt><span>03</span>Stakes</dt><dd>Medium</dd><p>A graded assignment, and what you learn sticks</p></div>
+    </dl>
+    <div class="readout" data-readout="2"><span class="rk">Test progress</span><div class="segs"><span class="seg">Inspect</span><span class="seg">Get plan</span><span class="seg">Check plan</span><span class="seg">Run test</span><span class="seg last">Sign off</span></div><span class="pct">0%</span></div>
+    <ol class="steps" data-steps="2">
+      <li class="step">
+        <div class="step-h"><h3>Inspect the answer</h3></div>
+        <p>Tap anything that makes you pause.</p>
+        <div class="doc-board"><div class="paper"><div class="chat">
+          <div class="bub bub-s"><span class="who">Student</span><span id="seasons-q"></span></div>
+          <div class="bub bub-a"><span class="who">AI chatbot</span><div class="doc flaggable" id="seasons-doc"></div></div>
+        </div></div><div class="flag-bar"><span class="flag-count" id="seasons-count"></span><button class="btn-ghost" data-clearflags="seasons">Clear flags</button></div></div>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Have AI draft the test plan</h3></div>
+        <p>This asks AI what to test, how and why. It doesn't ask whether the answer is right.</p>
+        <div class="prompt"><div class="prompt-bar"><span class="prompt-kind">Test plan prompt</span><button class="btn" data-copy="c2">Copy prompt</button></div><pre class="prompt-text" id="c2-prompt"></pre></div>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Check the plan</h3></div>
+        <p>A test plan only works if the person running it understands it. Check what's true for you.</p>
+        <div class="pills">
+          <label class="pill"><input type="checkbox" value="I understand why it chose those claims" data-k="e2a" data-label="Plan check · I understand why it chose those claims"><span class="ck"></span>I understand why it chose those claims</label>
+          <label class="pill"><input type="checkbox" value="The tests are things I can actually do" data-k="e2b" data-label="Plan check · The tests are doable"><span class="ck"></span>The tests are things I can actually do</label>
+          <label class="pill"><input type="checkbox" value="I know where I'd look" data-k="e2c" data-label="Plan check · I know where I'd look"><span class="ck"></span>I know where I'd look</label>
+        </div>
+        <label class="field"><span>One change I'd make to the plan:</span><textarea id="e2-change" data-k="e2-change" data-label="T-02 · Change I'd make to the plan"></textarea></label>
+      </li>
+      <li class="step">
+        <div class="step-h"><h3>Run one test</h3></div>
+        <p>Pick one claim from the plan and test it. A good place to start: <a href="https://spaceplace.nasa.gov/seasons/" target="_blank" rel="noopener">NASA Space Place: What causes the seasons?</a></p>
+        <div class="field"><span>Which claim did you test?</span>
+          <div class="pills pills-col" role="radiogroup" aria-label="Claim tested">
+            <label class="pill"><input type="radio" name="e2-claim" value="Earth's axis is tilted about 23.5 degrees" data-k="e2-claim" data-label="T-02 · Claim tested"><span class="ck"></span>Earth's axis is tilted about 23.5 degrees</label>
+            <label class="pill"><input type="radio" name="e2-claim" value="Direct sunlight and longer days bring more warmth" data-k="e2-claim"><span class="ck"></span>Direct sunlight and longer days bring more warmth</label>
+            <label class="pill"><input type="radio" name="e2-claim" value="We're closer to the Sun during summer" data-k="e2-claim"><span class="ck"></span>We're closer to the Sun during summer</label>
+            <label class="pill"><input type="radio" name="e2-claim" value="Summer in the north means winter in the south" data-k="e2-claim"><span class="ck"></span>Summer in the north means winter in the south</label>
+            <label class="pill"><input type="radio" name="e2-claim" value="A 2019 NASA study: tilt 60%, distance 40%" data-k="e2-claim"><span class="ck"></span>A 2019 NASA study: tilt 60%, distance 40%</label>
+          </div>
+        </div>
+        <label class="field"><span>What I found:</span><textarea id="e2-found" data-k="e2-found" data-label="T-02 · What I found"></textarea></label>
+        <div class="field"><span>What did the test show?</span></div>
+        <div class="pills" role="radiogroup" aria-label="Test result">
+          <label class="pill"><input type="radio" name="e2-res" value="Passed: confirmed" data-k="e2-res" data-label="T-02 · Test result"><span class="ck"></span>Passed · confirmed</label>
+          <label class="pill"><input type="radio" name="e2-res" value="Failed: contradicted" data-k="e2-res"><span class="ck"></span>Failed · contradicted</label>
+          <label class="pill"><input type="radio" name="e2-res" value="Inconclusive" data-k="e2-res"><span class="ck"></span>Inconclusive</label>
+        </div>
+      </li>
+      <li class="step human">
+        <div class="step-h"><h3>Sign off</h3><span class="human-tag">Human decision</span></div>
+        <p>Based on your test, what will you do with this answer?</p>
+        <div class="signoff">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="verdicts" role="radiogroup" aria-label="Sign-off decision">
+              <label class="verdict" data-v="use"><input type="radio" name="e2-call" value="Use" data-k="e2-call" data-label="T-02 · Sign-off"><b>USE</b><span>Use it in my paragraph</span></label>
+              <label class="verdict" data-v="modify"><input type="radio" name="e2-call" value="Modify" data-k="e2-call"><b>MODIFY</b><span>Fix what's wrong first</span></label>
+              <label class="verdict" data-v="retest"><input type="radio" name="e2-call" value="Retest" data-k="e2-call"><b>RETEST</b><span>I need to check more</span></label>
+              <label class="verdict" data-v="dnu"><input type="radio" name="e2-call" value="Do not use" data-k="e2-call"><b>DO NOT USE</b><span>Find a better source</span></label>
+            </div>
+            <label class="field"><span>Because…</span><textarea id="e2-why" data-k="e2-why" data-label="T-02 · Because"></textarea></label>
+          </div>
+          <div class="tag-hold"><svg class="string" width="80" height="40" aria-hidden="true"><path d="M0 0 Q 40 30 40 44 Q 40 30 80 0" fill="none" stroke="#9AA3AA" stroke-width="1.5"/></svg>
+            <div class="tag" id="tag-e2" data-s="none" aria-live="polite"><p class="tk">Inspection tag · T-02</p><div class="band" data-band>Awaiting sign-off</div>
+              <dl><dt>Tested</dt><dd>Seasons answer</dd><dt>Test run</dt><dd data-res>—</dd><dt>Tester</dt><dd>Student</dd><dt>Date</dt><dd class="mono">02 OCT 2026</dd></dl><span class="stampmark" data-stamp>OK</span></div>
+          </div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- R-02 -->
+  <section class="sec" id="sr2" data-sec data-title="Table debrief #2" hidden>
+    <div class="sheet-id"><span><b>R-02</b> · Table debrief #2</span><span></span></div>
+    <div class="sec-head"><h2>First, check <em>your work.</em></h2><p class="lead">You flagged sentences in the student answer. Run the full inspection to see which problems you caught before you debrief with your table.</p></div>
+    <div class="reveal">
+      <div class="reveal-top"><div><h3>Full inspection · the seasons answer</h3><p>Scan the student answer for every problem. Your flags stay highlighted.</p></div><button class="btn" data-reveal="seasons" aria-expanded="false">Run full inspection</button></div>
+      <div class="reveal-panel" hidden><div class="reveal-body"><div class="doc-board"><span class="scan2"></span><div class="paper"><div class="doc" id="seasons-ann"></div></div></div><ol class="findings" id="seasons-findings"></ol></div><div class="legend" id="seasons-legend"></div><p class="score" id="seasons-score"></p></div>
+    </div>
+    <div class="sec-head" style="margin-top:12px"><h2>Who runs each test, <em>and when?</em></h2><p class="lead">Today AI drafted most of the plan. Over time, students take over each decision. Here's one way that could unfold.</p></div>
+    <div class="release">
+      <div class="release-head"><h3>Seven decisions, handed over gradually</h3><p class="muted" style="font-size:.9rem">Today's run is the first column.</p></div>
+      <div class="release-scroll"><table class="rtable" id="release-table"></table></div>
+      <div class="release-key"><span class="own own-ai">AI drafts · student reviews</span><span class="own own-menu">Student picks from options</span><span class="own own-you">Student decides</span></div>
+    </div>
+    <div class="discuss">
+      <div class="discuss-h"><span class="k">Discuss with your table</span><h3>Handing over the test</h3><p>Pick one of these to discuss with your group.</p></div>
+      <ol class="dq">
+        <li>Which decision should students take over first, and why?</li>
+        <li>What do students need to know before they move to the next column?</li>
+        <li>The table keeps two decisions with students from day one: interpreting the results and making the final call. Do you agree those are the only ones, or are there other steps that should never be handed over to AI?</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- LIB -->
+  <section class="sec" id="slib" data-sec data-title="Test library" hidden>
+    <div class="sheet-id"><span><b>LIB</b> · Test library</span><span>12 tests</span></div>
+    <div class="sec-head"><h2>Twelve tests. <em>One sign-off.</em></h2><p class="lead">Each verification approach is a different kind of test. Today you ran two of them. Pick any test from the list to open its card.</p></div>
+    <div class="anatomy">
+      <div class="an-h"><span class="k">How to read a test card</span></div>
+      <div class="an-grid">
+        <div class="an-c"><b>What it does</b><p>A short description of the test and how it works.</p></div>
+        <div class="an-c"><b>Use it when</b><p>The situation where this test is the right choice.</p></div>
+        <div class="an-c"><b>Catches</b><p>Which of the four failures it helps find:</p><span class="an-tags"><span><i class="dot" data-r="volume"></i>Volume</span><span><i class="dot" data-r="mistakes"></i>Hallucinations &amp; mistakes</span><span><i class="dot" data-r="bias"></i>Bias</span><span><i class="dot" data-r="syco"></i>Sycophancy</span></span></div>
+        <div class="an-c an-two"><b>Two prompts</b>
+          <p><em>Paste-ready:</em> a complete prompt. Copy it into any chatbot, fill in the parts in [brackets], and AI runs the whole test in one response.</p>
+          <p><em>Guide me:</em> AI walks you through the test one question at a time. You make each decision as you go.</p></div>
+      </div>
+    </div>
+    <div class="filters" role="group" aria-label="Filter by what the test catches">
+      <span class="lab">Catches:</span>
+      <button class="chip is-on" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" data-filter="volume" aria-pressed="false"><span class="dot" data-r="volume"></span>Volume</button>
+      <button class="chip" data-filter="mistakes" aria-pressed="false"><span class="dot" data-r="mistakes"></span>Hallucinations &amp; mistakes</button>
+      <button class="chip" data-filter="bias" aria-pressed="false"><span class="dot" data-r="bias"></span>Bias</button>
+      <button class="chip" data-filter="syco" aria-pressed="false"><span class="dot" data-r="syco"></span>Sycophancy</button>
+    </div>
+    <div class="kit"><ul class="kit-list" id="kit-list"></ul><article class="kit-detail" id="kit-detail" aria-live="polite"></article></div>
+  </section>
+
+  <!-- USE -->
+  <section class="sec" id="suse" data-sec data-title="Your next test" hidden>
+    <div class="sheet-id"><span><b>USE</b> · Your next test</span><span></span></div>
+    <div class="sec-head"><h2>Your next <em>test.</em></h2><p class="lead">Think of something real you'll make with AI next week. Name it, set the dials, and take your test card with you.</p></div>
+    <label class="field next-what"><span>What will you make with AI next?</span><input type="text" id="next-what" data-k="next-what" data-label="Next test · What I'll make" placeholder="e.g. A family newsletter about the science fair"></label>
+    <div class="dialbox">
+      <div class="dials" id="dials2"></div>
+      <div id="dial-out2" aria-live="polite"></div>
+    </div>
+    <p class="closing">AI can help run the tests. <em>Only you can sign off.</em></p>
+    <div class="contact-strip"><span class="k">Test leads</span><span>TJ Neville · <span class="sel">nevillet@fpsct.org</span></span><span>Andy Marshall · <span class="sel">marshalla@fpsct.org</span></span><span class="muted">Farmington Public Schools</span></div>
+    <div hidden aria-hidden="true"><textarea id="all-notes"></textarea><button id="copy-notes"></button><button id="clear-ask"></button><span id="clear-confirm"><button id="clear-yes"></button><button id="clear-no"></button></span><select id="t2"></select></div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+/* ---------- briefing frames ---------- */
+(function(){
+  var frames=[].slice.call(document.querySelectorAll("#frames .frame")),segs=[].slice.call(document.querySelectorAll(".fseg")),
+      prev=document.getElementById("f-prev"),next=document.getElementById("f-next"),cnt=document.getElementById("f-count"),wipe=document.querySelector(".fwipe"),cur=0;
+  function go(i){
+    if(i<0||i>3||i===cur){return;}
+    frames[cur].hidden=true;frames[cur].classList.remove("in");
+    var f=frames[i];f.hidden=false;
+    f.classList.remove("in");void f.offsetWidth;f.classList.add("in");
+    wipe.classList.remove("go");void wipe.offsetWidth;wipe.classList.add("go");
+    cur=i;paint();
+    var sec=document.getElementById("s0"),top=sec.getBoundingClientRect().top;
+    if(top<0)window.scrollTo({top:window.pageYOffset+top-12,behavior:"smooth"});
+  }
+  function paint(){
+    segs.forEach(function(sg,k){sg.classList.toggle("is-on",k===cur);sg.classList.toggle("is-done",k<cur);sg.setAttribute("aria-selected",k===cur?"true":"false");});
+    prev.hidden=cur===0;cnt.textContent="0"+(cur+1)+" / 04";
+    next.textContent=cur<3?"Next: "+segs[cur+1].querySelector("span").textContent.replace(/^\d+\s*/,"")+" →":"Next: Criteria test →";
+  }
+  segs.forEach(function(sg,k){sg.addEventListener("click",function(){go(k);});});
+  prev.addEventListener("click",function(){go(cur-1);});
+  next.addEventListener("click",function(){if(cur<3)go(cur+1);else if(window.G)G.show("s1",true);});
+  document.addEventListener("keydown",function(e){
+    var s0=document.getElementById("s0");if(!s0||s0.hidden)return;
+    var tg=e.target;if(tg&&(/INPUT|TEXTAREA|SELECT/.test(tg.tagName)||tg.closest(".opts")||tg.closest(".tabs-scroll")||tg.closest("[role=tablist]")&&tg.closest(".rail")))return;
+    if(e.key==="ArrowRight"){e.preventDefault();if(cur<3)go(cur+1);}
+    else if(e.key==="ArrowLeft"){e.preventDefault();go(cur-1);}
+  });
+  paint();
+})();
+</script>
+<script>
+/* ---------- test-level dials ---------- */
+function makeDials(BOX,OUT,KEY,CARD){
+  var D=[
+   {k:"p",name:"Purpose",opts:[["Brainstorm or explore","ideas, options, starting points",0,"brainstorming"],["Plan a lesson or unit","objectives, sequence, activities",1,"planning instruction"],["Make student materials","handouts, quizzes, rubrics, sites",1,"making student materials"],["Communicate or evaluate","emails, feedback, grades, reports",2,"communicating or evaluating"]]},
+   {k:"a",name:"Audience",opts:[["Just me","for my own thinking",0,"just you"],["My students","they'll learn from it",1,"your students"],["Colleagues","other educators will use it",1,"colleagues"],["Families or community","parents, guardians, the public",2,"families and the community"],["Administration or district","leaders will rely on it",2,"administrators"]]},
+   {k:"s",name:"Stakes",opts:[["Low","easy to fix or redo",0,"low"],["Medium","people will notice if it's wrong",1,"medium"],["High","hard to undo · affects people",4,"high"]]}];
+  var L={
+   quick:{name:"Quick test",n:1,desc:"A fast look for obvious problems before you build on it.",list:["Skim for anything that sounds off or too good to be true","Ask the AI: what might be wrong or missing here?"],tests:[[3,"Challenge Test"],[12,"Confidence Test"]]},
+   spot:{name:"Spot test",n:2,desc:"Check the parts that matter most for your purpose.",list:["Pick the two or three claims or choices that matter most","Check them against your criteria or a trusted source","Fix what fails before anyone else sees it"],tests:[[1,"Criteria Test"],[11,"Source Test"],[4,"Coverage Test"]]},
+   full:{name:"Full stress test",n:3,desc:"Test it thoroughly before anyone relies on it.",list:["Confirm every claim that matters with independent sources","Look for what's missing and whose view is absent","Ask where it would fail, then sign off yourself"],tests:[[2,"Evidence Trace"],[10,"Cross-Check"],[8,"Stress Test"],[4,"Coverage Test"]]}};
+  var sel={p:1,a:1,s:1};try{var sv=JSON.parse(localStorage.getItem(KEY)||"null");if(sv)sel=sv;}catch(e){}
+  function ang(i,n){return -120+i*240/(n-1);}
+  function knob(d){
+    var n=d.opts.length,t="";
+    for(var i=0;i<n;i++){var a=(ang(i,n)-90)*Math.PI/180;t+="<line class=\"tick\" data-t=\""+i+"\" x1=\""+(70+58*Math.cos(a))+"\" y1=\""+(70+58*Math.sin(a))+"\" x2=\""+(70+66*Math.cos(a))+"\" y2=\""+(70+66*Math.sin(a))+"\"/>";}
+    return "<svg class=\"knob\" viewBox=\"0 0 140 140\" aria-hidden=\"true\"><defs><radialGradient id=\"knobg\" cx=\"40%\" cy=\"35%\" r=\"70%\"><stop offset=\"0\" stop-color=\"#3A444F\"/><stop offset=\"1\" stop-color=\"#151A20\"/></radialGradient></defs>"+t+
+      "<circle class=\"ring\" cx=\"70\" cy=\"70\" r=\"50\"/><circle class=\"body\" cx=\"70\" cy=\"70\" r=\"44\"/><circle class=\"ridge\" cx=\"70\" cy=\"70\" r=\"41\"/>"+
+      "<g class=\"ptr\"><line x1=\"70\" y1=\"64\" x2=\"70\" y2=\"34\"/><circle cx=\"70\" cy=\"32\" r=\"3\"/></g><circle class=\"cap\" cx=\"70\" cy=\"70\" r=\"12\"/></svg>";
+  }
+  var box=document.getElementById(BOX);
+  box.innerHTML=D.map(function(d,di){
+    return "<div class=\"dial\" data-dial=\""+d.k+"\"><div class=\"dial-lbl\"><span>0"+(di+1)+"</span>"+d.name+"</div>"+knob(d)+
+      "<div class=\"opts\" role=\"radiogroup\" aria-label=\""+d.name+"\">"+d.opts.map(function(o,i){return "<button class=\"opt\" role=\"radio\" aria-checked=\"false\" data-d=\""+d.k+"\" data-i=\""+i+"\">"+o[0]+"<small>"+o[1]+"</small></button>";}).join("")+"</div></div>";
+  }).join("");
+  function render(animate){
+    var score=0,why=[];
+    D.forEach(function(d){
+      var i=sel[d.k],n=d.opts.length,el=box.querySelector("[data-dial=\""+d.k+"\"]");
+      el.querySelector(".ptr").style.transform="rotate("+ang(i,n)+"deg)";
+      [].forEach.call(el.querySelectorAll(".tick"),function(t){t.classList.toggle("on",+t.getAttribute("data-t")===i);});
+      [].forEach.call(el.querySelectorAll(".opt"),function(b){b.setAttribute("aria-checked",+b.getAttribute("data-i")===i?"true":"false");b.tabIndex=+b.getAttribute("data-i")===i?0:-1;});
+      score+=d.opts[i][2];why.push(d.opts[i][3]);
+    });
+    var lv=score>=4?L.full:(score>=2?L.spot:L.quick),out=document.getElementById(OUT);
+    if(CARD){renderCard(out,lv,D.map(function(d){return d.opts[sel[d.k]][0];}),animate);return;}
+    out.innerHTML="<div class=\"do-l\"><span class=\"k\">Recommended</span><b class=\"do-level\">"+lv.name+"</b><div class=\"do-meter"+(lv.n===3?" full":"")+"\">"+[1,2,3].map(function(k){return "<i class=\""+(k<=lv.n?"on":"")+"\"></i>";}).join("")+"</div><p class=\"do-why\">For <b>"+why[0]+"</b> for <b>"+why[1]+"</b>, with <b>"+why[2]+"</b> stakes.</p></div>"+
+      "<div class=\"do-r\"><p class=\"do-desc\">"+lv.desc+"</p><ul class=\"do-list\">"+lv.list.map(function(x){return "<li>"+x+"</li>";}).join("")+"</ul><div class=\"do-tests\"><span>Tests to try:</span>"+lv.tests.map(function(t){return "<button data-kitgo=\""+t[0]+"\">"+t[1]+" →</button>";}).join("")+"</div></div>";
+    if(animate){out.classList.remove("swap");void out.offsetWidth;out.classList.add("swap");}
+  }
+  box.addEventListener("click",function(e){var b=e.target.closest(".opt");if(!b)return;sel[b.getAttribute("data-d")]=+b.getAttribute("data-i");try{localStorage.setItem(KEY,JSON.stringify(sel));}catch(x){}render(true);});
+  box.addEventListener("keydown",function(e){var b=e.target.closest(".opt");if(!b)return;var d=b.getAttribute("data-d"),dd=D.filter(function(x){return x.k===d;})[0],n=dd.opts.length;
+    if(["ArrowDown","ArrowRight","ArrowUp","ArrowLeft"].indexOf(e.key)<0)return;e.preventDefault();
+    sel[d]=(sel[d]+((e.key==="ArrowDown"||e.key==="ArrowRight")?1:-1)+n)%n;render(true);box.querySelector("[data-d=\""+d+"\"][data-i=\""+sel[d]+"\"]").focus();});
+  window.__rerender=window.__rerender||{};window.__rerender[BOX]=function(){render(false);};
+  render(false);
+}
+document.addEventListener("click",function(e){var g=e.target.closest("[data-kitgo]");if(!g||!window.G)return;
+  var all=document.querySelector("[data-filter=all]");if(all)all.click();G.show("slib",true);
+  var it=document.querySelector("#kit-list [data-kit=\""+g.getAttribute("data-kitgo")+"\"]");if(it)it.click();});
+function esc2(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function renderCard(out,lv,picks,animate){
+  var kit=(window.G&&G.KIT)||[],whatEl=document.getElementById("next-what"),what=whatEl&&whatEl.value.trim();
+  var tests=lv.tests.slice(0,2).map(function(t){var k=kit.filter(function(x){return x.n===t[0];})[0]||{};return {n:t[0],name:t[1],orig:k.orig||"",when:k.when||"",paste:k.paste||""};});
+  out.innerHTML="<div class=\"tc\"><div class=\"tc-top\"><span class=\"k\">Your test card</span><span class=\"tc-id\">Beyond Prompting · 02 OCT 2026</span></div>"+
+   "<div class=\"tc-body\"><div class=\"tc-l\"><p class=\"tc-label\">Testing</p><h3 class=\"tc-what\">"+(what?esc2(what):"Something you'll make with AI")+"</h3>"+
+   "<dl class=\"tc-pas\"><div><dt>Purpose</dt><dd>"+esc2(picks[0])+"</dd></div><div><dt>Audience</dt><dd>"+esc2(picks[1])+"</dd></div><div><dt>Stakes</dt><dd>"+esc2(picks[2])+"</dd></div></dl>"+
+   "<p class=\"tc-label\">Test level</p><b class=\"do-level\">"+lv.name+"</b><div class=\"do-meter"+(lv.n===3?" full":"")+"\">"+[1,2,3].map(function(k){return "<i class=\""+(k<=lv.n?"on":"")+"\"></i>";}).join("")+"</div><p class=\"tc-desc\">"+lv.desc+"</p></div>"+
+   "<div class=\"tc-r\"><p class=\"tc-label\">Run these two tests</p>"+tests.map(function(t,i){return "<div class=\"tc-test\"><div class=\"tc-th\"><span class=\"tc-n\">0"+(i+1)+"</span><div><b>"+t.name+"</b>"+(t.orig?"<small>"+esc2(t.orig)+"</small>":"")+"</div></div><p>"+esc2(t.when)+"</p><div class=\"tc-act\"><button class=\"tc-copy\" data-copytest=\""+t.n+"\">Copy paste-ready prompt</button><button class=\"tc-open\" data-kitgo=\""+t.n+"\">Open in library →</button></div><pre class=\"tc-pre\" hidden>"+esc2(t.paste)+"</pre></div>";}).join("")+
+   "<p class=\"tc-sign\">Then sign off yourself: <b>Use</b> · <b>Modify</b> · <b>Retest</b> · <b>Do not use</b></p></div></div></div>";
+  if(animate){out.classList.remove("swap");void out.offsetWidth;out.classList.add("swap");}
+}
+document.addEventListener("click",function(e){var b=e.target.closest("[data-copytest]");if(!b)return;
+  var pre=b.closest(".tc-test").querySelector(".tc-pre"),txt=pre.textContent,orig="Copy paste-ready prompt";
+  function ok(){b.textContent="Copied ✓";b.classList.add("done");setTimeout(function(){b.textContent=orig;b.classList.remove("done");},2000);}
+  function fail(){pre.hidden=false;try{var r=document.createRange();r.selectNodeContents(pre);var sl=getSelection();sl.removeAllRanges();sl.addRange(r);}catch(x){}b.textContent="Selected · press Ctrl/⌘ C";}
+  try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fail);else fail();}catch(x){fail();}
+});
+makeDials("dials","dial-out","bp-stress3-dials",false);
+document.addEventListener("DOMContentLoaded",function(){
+  makeDials("dials2","dial-out2","bp-stress3-next",true);
+  var w=document.getElementById("next-what");if(w)w.addEventListener("input",function(){window.__rerender.dials2();});
+});
+</script>
+<script>
+/* ---------- test rig (hero) ---------- */
+(function(){
+  var CHECKS=[
+    {s:"flag",st:"FLAG",d:"Sycophancy · it echoes what the asker already believed"},
+    {s:"pass",st:"PASS",d:"Easy to confirm and low stakes"},
+    {s:"flag",st:"FLAG",d:"Bias · “every student” overgeneralizes"},
+    {s:"fail",st:"FAIL",d:"Hallucination · no such study can be found"},
+    {s:"flag",st:"FLAG",d:"Volume · six claims, none supported"}];
+  var out=document.getElementById("rig-out"),scan=document.getElementById("scanline"),log=document.getElementById("rig-log"),
+      tally=document.getElementById("rig-tally"),verdict=document.getElementById("rig-verdict"),rec=document.getElementById("rig-rec"),st=document.getElementById("rig-state");
+  var cks=[].slice.call(document.querySelectorAll("#rig-out .claim")),timers=[],reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function line(i,t){var c=CHECKS[i],li=document.createElement("li");li.innerHTML="<span class=\"t\">T+"+t.toFixed(1)+"s</span><span>CHECK 0"+(i+1)+"</span><span class=\"s "+c.s+"\">"+c.st+"</span><span class=\"d\">"+c.d+"</span>";log.appendChild(li);}
+  function finish(){
+    scan.classList.remove("on");rec.classList.add("idle");st.textContent="Run complete";
+    verdict.classList.add("done");
+    verdict.innerHTML="<span>1 pass · 3 flags · 1 fail</span><span class=\"req\">Human sign-off required</span>";
+    if(!reduce)timers.push(setTimeout(run,5000));
+  }
+  function reset(){timers.forEach(clearTimeout);timers=[];cks.forEach(function(c){c.className="claim";});log.innerHTML="";verdict.classList.remove("done");tally.textContent="";verdict.innerHTML="<span id=\"rig-tally\">0 of 5 claims checked</span>";tally=document.getElementById("rig-tally");rec.classList.remove("idle");st.textContent="Running";}
+  function run(){
+    reset();
+    if(reduce){cks.forEach(function(c,i){c.classList.add(CHECKS[i].s);line(i,0.6*(i+1));});finish();return;}
+    scan.style.transition="none";scan.style.top="0px";void scan.offsetWidth;scan.style.transition="";scan.classList.add("on");
+    cks.forEach(function(c,i){
+      var t=500+i*900;
+      timers.push(setTimeout(function(){var r=c.getClientRects(),o=out.getBoundingClientRect();var last=r[r.length-1]||c.getBoundingClientRect();scan.style.top=(last.bottom-o.top+2)+"px";},t));
+      timers.push(setTimeout(function(){c.classList.add(CHECKS[i].s);line(i,(t+400)/1000);var tl=document.getElementById("rig-tally");if(tl)tl.textContent=(i+1)+" of 5 claims checked";},t+450));
+    });
+    timers.push(setTimeout(function(){scan.style.top=(out.clientHeight-2)+"px";},500+5*900));
+    timers.push(setTimeout(finish,500+5*900+500));
+  }
+  document.getElementById("rig-replay").addEventListener("click",run);
+  if(document.readyState==="complete")setTimeout(run,300);else window.addEventListener("load",function(){setTimeout(run,300);});
+})();
+
+window.CFG={
+  ns:"bp-stress3",nextWord:"Next",kitNoun:"Test",
+  risk:{volume:"Volume",mistakes:"Hallucination or mistake",bias:"Bias",syco:"Sycophancy",fit:"Doesn't fit the purpose",ok:"Passes"},
+  flagWords:{none:"No flags yet",one:"<b>1</b> flag logged",many:"<b>{n}</b> flags logged"},
+  score:function(f,t,n){return n?("Your flags caught "+f+" of "+t+" problems before the full inspection. Anything else you flagged is worth raising in the debrief."):"You didn't flag anything during inspection. Compare the full inspection with what the AI's test caught.";},
+  relHead:["Decision","First run (today)","With support","On their own"],
+  own:{ai:"AI drafts · student reviews",menu:"Student picks from options",you:"Student decides"},
+  kitAlias:{1:{name:"Criteria Test"},2:{name:"Evidence Trace"},3:{name:"Challenge Test"},4:{name:"Coverage Test"},5:{name:"Counter-Case Test"},6:{name:"Test-Level Setting"},7:{name:"Logic Test"},8:{name:"Stress Test"},9:{name:"Test Plan"},10:{name:"Cross-Check"},11:{name:"Source Test"},12:{name:"Confidence Test"}},
+  onCrit:function(list){window.__crit=list;if(window.renderSpecs)renderSpecs();},
+  onShow:function(id,i){var rc=document.getElementById("rail-count");if(rc)rc.textContent=(i+1)+" / 7";},
+  ready:function(){
+    var G=window.G,$=G.$,$$=G.$$,esc=G.esc;
+    if(!G.state.specRes)G.state.specRes={};
+    window.renderSpecs=function(){
+      var list=window.__crit||G.selectedCrit(),res=G.state.specRes,box=$("#spec-results");
+      if(!list.length){box.innerHTML="<p class=\"sr-empty\">Choose criteria in step 2 and they'll show up here, ready to mark from the AI's report.</p>";updTag1();progress();return;}
+      var p=0,pa=0,f=0;
+      box.innerHTML=list.map(function(c,i){var v=res[c]||"";if(v==="PASS")p++;else if(v==="PARTIAL")pa++;else if(v==="FAIL")f++;
+        return "<div class=\"sr-row\"><span class=\"sr-id\">C-0"+(i+1)+"</span><span class=\"sr-name\">"+esc(c)+"</span><span class=\"seg3\" role=\"radiogroup\" aria-label=\"Result for "+esc(c)+"\">"+
+        ["PASS","PARTIAL","FAIL"].map(function(o){return "<label><input type=\"radio\" name=\"sr-"+i+"\" value=\""+o+"\" data-crit-res=\""+esc(c)+"\""+(v===o?" checked":"")+">"+o+"</label>";}).join("")+"</span></div>";}).join("")+
+        "<div class=\"sr-sum\"><span>"+list.length+" criteria</span><span style=\"color:#3DDC84\">"+p+" pass</span><span style=\"color:#FFC53D\">"+pa+" partial</span><span style=\"color:#FF5A5F\">"+f+" fail</span><span class=\"sr-bar\" aria-hidden=\"true\"><i style=\"width:"+(p/list.length*100)+"%;background:#3DDC84\"></i><i style=\"width:"+(pa/list.length*100)+"%;background:#FFC53D\"></i><i style=\"width:"+(f/list.length*100)+"%;background:#FF5A5F\"></i></span></div>";
+      updTag1();progress();
+    };
+    $("#spec-results").addEventListener("change",function(e){var c=e.target.getAttribute("data-crit-res");if(!c)return;G.state.specRes[c]=e.target.value;G.save();renderSpecs();});
+    var MAP={"Use":["use","Ready to use","#1D8049","CLEARED"],"Modify":["modify","Modify before use","#D09200","MODIFY"],"Retest":["retest","Hold · Retest","#2C5EAD","HOLD"],"Do not use":["dnu","Do not use","#C8232D","REJECTED"]};
+    function paint(tag,val,animate){var m=MAP[val];tag.setAttribute("data-s",m?m[0]:"none");tag.style.setProperty("--c",m?m[2]:"var(--line-2)");$("[data-band]",tag).textContent=m?m[1]:"Awaiting sign-off";
+      $("[data-stamp]",tag).textContent=m?m[3]:"";tag.classList.toggle("stamped",!!m);
+      if(animate&&m){tag.classList.remove("swing","slam");void tag.offsetWidth;tag.classList.add("swing","slam");}}
+    function updTag1(animate){var t=$("#tag-c1"),list=G.selectedCrit(),res=G.state.specRes,n=list.filter(function(c){return res[c];}).length;
+      $("[data-specs]",t).textContent=list.length?(n+" of "+list.length+" reviewed"):"—";paint(t,G.state["c1-call"],animate);}
+    function updTag2(animate){var t=$("#tag-e2");$("[data-res]",t).textContent=G.state["e2-res"]||"—";paint(t,G.state["e2-call"],animate);}
+    function progress(){
+      var s=G.state,flg=function(k){return (s["flags-"+k]||[]).length>0;},any=function(ks){return ks.some(function(k){return s[k]&&String(s[k]).trim();});};
+      var list=G.selectedCrit(),res=s.specRes||{};
+      var d1=[!!s["c1-prompt"],list.length>0,flg("lesson"),!!s.cp1,list.some(function(c){return res[c];}),!!s["c1-call"]];
+      var d2=[flg("seasons"),!!s.cp2,any(["e2a","e2b","e2c","e2-change"]),!!(s["e2-res"]||s["e2-claim"]),!!s["e2-call"]];
+      [[1,d1],[2,d2]].forEach(function(p){
+        var ro=$("[data-readout=\""+p[0]+"\"]"),segs=$$(".seg",ro),n=p[1].filter(Boolean).length;
+        segs.forEach(function(sg,i){sg.classList.toggle("on",p[1][i]);});
+        $(".pct",ro).textContent=Math.round(n/p[1].length*100)+"%";
+        $$("[data-steps=\""+p[0]+"\"] > .step").forEach(function(st,i){st.classList.toggle("is-done",p[1][i]&&!st.classList.contains("human"));});
+      });
+      var cnt=0;Object.keys(s).forEach(function(k){if(/^(flags-|crit$|critCustom|specRes|seen|kitSel|cp)/.test(k))return;var v=s[k];if(v&&String(v).trim())cnt++;});
+      cnt+=(s["flags-lesson"]||[]).length+(s["flags-seasons"]||[]).length;
+      if($("#log-count")){$("#log-count").textContent=cnt+" entr"+(cnt===1?"y":"ies");$("#log-bar").style.width=Math.min(100,cnt/30*100)+"%";}
+    }
+    window.__progress=progress;
+    document.addEventListener("change",function(e){var n=e.target.name;if(n==="c1-call")updTag1(true);if(n==="e2-call")updTag2(true);if(n==="e2-res")updTag2();setTimeout(progress,0);});
+    document.addEventListener("input",function(){clearTimeout(window.__pt);window.__pt=setTimeout(progress,250);});
+    document.addEventListener("click",function(e){
+      var cp=e.target.closest("[data-copy]");if(cp){var w=cp.getAttribute("data-copy");if(w==="c1"&&!cp.disabled){G.state.cp1=1;G.save();}if(w==="c2"){G.state.cp2=1;G.save();}}
+      if(e.target.closest("[data-u],[data-clearflags]"))setTimeout(progress,0);
+      var rv=e.target.closest("[data-reveal]");if(rv)setTimeout(function(){var open=!$(".reveal-panel",rv.closest(".reveal")).hidden;rv.textContent=open?"Hide inspection":"Run full inspection";inspect(rv);},20);
+    });
+    
+    function inspect(btn){
+      var box=btn.closest(".reveal"),panel=$(".reveal-panel",box);if(panel.hidden)return;
+      var board=$(".reveal-body .doc-board",box),scan=$(".scan2",box),anns=$$(".u.ann",board),items=$$(".findings li",box);
+      if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+      box.classList.add("inspecting");anns.forEach(function(a){a.classList.remove("lit");});items.forEach(function(li){li.classList.remove("lit");});
+      var bTop=board.getBoundingClientRect().top,step=380;
+      anns.forEach(function(a,i){setTimeout(function(){scan.style.top=(a.getBoundingClientRect().bottom-bTop)+"px";a.classList.add("lit");
+        [].forEach.call(a.querySelectorAll("sup"),function(sp){var n=+sp.textContent;if(items[n-1])items[n-1].classList.add("lit");});},200+i*step);});
+      setTimeout(function(){scan.style.top=board.scrollHeight+"px";items.forEach(function(li){li.classList.add("lit");});},200+anns.length*step);
+      setTimeout(function(){box.classList.remove("inspecting");},200+anns.length*step+600);
+    }
+    CFG.onClear=function(){G.state.specRes={};window.__crit=[];renderSpecs();updTag2();progress();};
+    renderSpecs();updTag2();progress();
+  }
+};
+</script>
+<script>
+(function(){
+"use strict";
+var CFG=window.CFG||{};var NS=CFG.ns||"bp-guide";
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function bold(t){return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");}
+var state={};try{state=JSON.parse(localStorage.getItem(NS)||"{}")||{};}catch(e){state={};}
+function save(){try{localStorage.setItem(NS,JSON.stringify(state));}catch(e){}}
+
+var RISK={volume:"Volume",mistakes:"Hallucination or mistake",bias:"Bias",syco:"Sycophancy",fit:"Fit for purpose",ok:"Holds up"};for(var rk in (CFG.risk||{}))RISK[rk]=CFG.risk[rk];
+
+/* ---------- content ---------- */
+var DOCS={
+ lesson:{lines:[
+  "# The Road to Revolution: Analyzing the Causes of the American Revolution",
+  "~ Grade 8 Social Studies · 45-minute class period",
+  "## Standard",
+  "CCSS.ELA-LITERACY.RH.6-8.1: Cite specific textual evidence to support analysis of primary and secondary sources.",
+  "## Learning objective",
+  "Students will analyze primary sources to evaluate the relative importance of the causes of the American Revolution.",
+  "## Materials",
+  "Textbook, Chapter 5 · “Causes of the Revolution” worksheet · Projector and slides · Chart paper and markers",
+  "## 1. Warm-up (10 minutes)",
+  "Students respond in their journals: “Think of a time something felt unfair. What did you do about it?” Invite 3–4 students to share.",
+  "## 2. Mini-lesson (15 minutes)",
+  "Present slides on the key events leading to the Revolution: the French and Indian War (1754–1763), the Stamp Act (1765), the Boston Massacre (1770), the Boston Tea Party (1770), and the Intolerable Acts (1774). Emphasize that the colonists were united in wanting independence from Britain from the start. Close with Patrick Henry's famous words, “Give me liberty, or give me death!”, delivered to the First Continental Congress in 1775.",
+  "## 3. Guided practice (15 minutes)",
+  "Students read Chapter 5, Section 2, and complete the worksheet by filling in the blanks with the definition of each act and event.",
+  "## 4. Primary source gallery walk (15 minutes)",
+  "Students rotate in small groups through six stations, each with a primary source excerpt. At each station, groups record the source's main idea on chart paper.",
+  "## 5. Exit ticket (10 minutes)",
+  "List the five causes of the American Revolution in chronological order.",
+  "## Differentiation",
+  "Provide extra support for struggling learners. Advanced students can complete additional research. English learners can use a translation tool.",
+  "## Homework",
+  "Write a paragraph explaining which cause was the most important.",
+  "> This lesson is fully aligned to standards, engaging, and ready to use in your classroom!"],
+  issues:[
+  {r:"fit",t:"The timing doesn't work.",d:"The segments add up to 65 minutes in a 45-minute period. The gallery walk, the only primary source work, is what gets cut.",m:["45-minute class period","Primary source gallery walk (15 minutes)"]},
+  {r:"fit",t:"The objective, activities and assessment don't line up.",d:"The objective asks students to analyze and evaluate. The practice is fill-in-the-blank, and the exit ticket asks for recall.",m:["analyze primary sources to evaluate","filling in the blanks","in chronological order"]},
+  {r:"mistakes",t:"Wrong date.",d:"The Boston Tea Party was in December 1773, not 1770.",m:["Boston Tea Party (1770)"]},
+  {r:"mistakes",t:"Wrong setting.",d:"Patrick Henry gave the “Give me liberty” speech in March 1775 at the Second Virginia Convention in Richmond, not to the Continental Congress.",m:["delivered to the First Continental Congress"]},
+  {r:"bias",t:"One-sided framing.",d:"Colonists were not united from the start. Many were Loyalists or stayed neutral, and independence wasn't widely sought until 1775–76. Indigenous and enslaved people's perspectives are absent.",m:["united in wanting independence"]},
+  {r:"volume",t:"The key materials are missing.",d:"The six primary source excerpts are never named. The plan's polish hides the gap.",m:["each with a primary source excerpt"]},
+  {r:"fit",t:"Generic differentiation.",d:"“Extra support” and “use a translation tool” are not plans.",m:["Provide extra support","translation tool"]},
+  {r:"syco",t:"An unearned claim of quality.",d:"“Fully aligned and ready to use” is the AI grading its own work. Nothing checked it.",m:["fully aligned to standards"]}]},
+ seasons:{lines:[
+  "Great question, and you're on the right track! Distance from the Sun does play a role. Here's the full picture:",
+  "**1. Earth's tilt.** Earth's axis is tilted about 23.5 degrees. As Earth orbits the Sun, this tilt means different parts of the planet lean toward the Sun at different times of year.",
+  "**2. Direct vs. indirect sunlight.** When your hemisphere tilts toward the Sun, sunlight hits it more directly, concentrating energy on a smaller area. Days are also longer, so there's more time to heat up.",
+  "**3. Distance.** Earth's orbit is slightly oval-shaped, so we are closer to the Sun during summer, which adds extra warmth. That's why summer is the hottest season!",
+  "**4. Opposite seasons.** When it's summer in the Northern Hemisphere, it's winter in the Southern Hemisphere, like in Australia.",
+  "According to a 2019 NASA study, the tilt accounts for about 60% of seasonal temperature change, and distance accounts for the other 40%.",
+  "So your idea is a great start. Just add the tilt and you'll have a perfect paragraph!"],
+  issues:[
+  {r:"syco",t:"It agrees with the misconception.",d:"“You're on the right track” validates the idea the student brought in, and that idea is wrong.",m:["on the right track","Just add the tilt"]},
+  {r:"mistakes",t:"A false claim.",d:"The Northern Hemisphere is closest to the Sun in early January, during winter. The distance changes by only about 3%.",m:["closer to the Sun during summer"]},
+  {r:"mistakes",t:"The answer contradicts itself.",d:"If distance caused summer, both hemispheres would have summer at the same time. Point 4 undoes point 3.",m:["winter in the Southern Hemisphere"]},
+  {r:"mistakes",t:"A source that doesn't exist.",d:"The “2019 NASA study” was invented for this exercise. A specific number attached to a trusted name is a common sign of a fabricated citation.",m:["2019 NASA study"]},
+  {r:"ok",t:"What holds up.",d:"The tilt, direct versus indirect sunlight, longer days, and opposite seasons are all accurate.",m:["tilted about 23.5 degrees","sunlight hits it more directly","Days are also longer"]}]}
+};
+var SEASONS_Q="why do we have seasons?? i think its because the earth gets closer to the sun in the summer right? i need it for my science paragraph";
+
+/* split a doc into flaggable units */
+function units(key){
+  var out=[];
+  DOCS[key].lines.forEach(function(l,li){
+    var kind="p",txt=l;
+    if(l.indexOf("# ")===0){kind="title";txt=l.slice(2);}
+    else if(l.indexOf("## ")===0){kind="h";txt=l.slice(3);}
+    else if(l.indexOf("~ ")===0){kind="meta";txt=l.slice(2);}
+    else if(l.indexOf("> ")===0){kind="claim";txt=l.slice(2);}
+    var parts=(kind==="p"||kind==="claim")?txt.replace(/([A-Za-z\)”"%])([.!?])([”"]?)\s+(?=[A-Z“"*])/g,"$1$2$3\u0001").split("\u0001"):[txt];
+    out.push({kind:kind,parts:parts.map(function(p,pi){return {id:li+"-"+pi,text:p};})});
+  });
+  return out;
+}
+var UNITS={lesson:units("lesson"),seasons:units("seasons")};
+function flags(key){return state["flags-"+key]||[];}
+function issuesFor(key,text){
+  var plain=text.replace(/\*\*/g,"");
+  return DOCS[key].issues.map(function(is,i){return {is:is,n:i+1};}).filter(function(o){return o.is.m.some(function(m){return plain.indexOf(m)>-1;});});
+}
+function renderDoc(key,el,annotate){
+  var f=flags(key),html="";
+  UNITS[key].forEach(function(line){
+    var inner=line.parts.map(function(u){
+      var cls="u"+(f.indexOf(u.id)>-1?" flag":""),extra="";
+      if(annotate){
+        var hits=issuesFor(key,u.text);
+        if(hits.length){cls+=" ann";extra=" data-r=\""+hits[0].is.r+"\"";}
+        var sups=hits.map(function(h){return "<sup data-r=\""+h.is.r+"\">"+h.n+"</sup>";}).join("");
+        return "<span class=\""+cls+"\""+extra+">"+bold(u.text)+sups+"</span>";
+      }
+      return "<span class=\""+cls+"\" data-u=\""+u.id+"\" tabindex=\"0\" role=\"button\" aria-pressed=\""+(f.indexOf(u.id)>-1)+"\">"+bold(u.text)+"</span>";
+    }).join(" ");
+    var tag={title:"p class=\"d-title\"",h:"p class=\"d-h\"",meta:"p class=\"d-meta\"",claim:"p class=\"d-claim\"",p:"p"}[line.kind];
+    html+="<"+tag+">"+inner+"</p>";
+  });
+  el.innerHTML=html;
+}
+function countLabel(key){
+  var n=flags(key).length;
+  var fw=CFG.flagWords||{none:"No passages flagged yet",one:"<b>1</b> passage flagged",many:"<b>{n}</b> passages flagged"};$("#"+key+"-count").innerHTML=n===0?fw.none:(n===1?fw.one:fw.many.replace("{n}",n));
+}
+function toggleFlag(key,id){
+  var f=flags(key).slice(),i=f.indexOf(id);
+  if(i>-1)f.splice(i,1);else f.push(id);
+  state["flags-"+key]=f;save();
+  var el=document.querySelector("#"+key+"-doc [data-u=\""+id+"\"]");
+  if(el){el.classList.toggle("flag",i<0);el.setAttribute("aria-pressed",i<0?"true":"false");}
+  countLabel(key);renderReveal(key);
+}
+function renderReveal(key){
+  renderDoc(key,$("#"+key+"-ann"),true);
+  var f=flags(key),found=0,total=0;
+  $("#"+key+"-findings").innerHTML=DOCS[key].issues.map(function(is,i){
+    var hit=false;
+    UNITS[key].forEach(function(l){l.parts.forEach(function(u){
+      if(f.indexOf(u.id)>-1 && is.m.some(function(m){return u.text.replace(/\*\*/g,"").indexOf(m)>-1;}))hit=true;});});
+    if(is.r!=="ok"){total++;if(hit)found++;}
+    return "<li><span class=\"fnum\" data-r=\""+is.r+"\">"+(i+1)+"</span><span><b>"+esc(is.t)+"</b>"+(hit&&is.r!=="ok"?"<span class=\"found\">You flagged this</span>":"")+" "+esc(is.d)+"</span></li>";
+  }).join("");
+  var used={};DOCS[key].issues.forEach(function(i){used[i.r]=1;});
+  $("#"+key+"-legend").innerHTML=Object.keys(used).map(function(r){return "<span><span class=\"dot\" data-r=\""+r+"\"></span>"+RISK[r]+"</span>";}).join("")+"<span><span class=\"dot\" style=\"background:var(--mark);outline:1px solid var(--line-2)\"></span>Your flags</span>";
+  $("#"+key+"-score").textContent=CFG.score?CFG.score(found,total,f.length):f.length?("You flagged "+found+" of the "+total+" issues before the close read. The other passages you flagged are worth raising in the debrief too."):"You didn't flag anything while reading. Compare the close read with what the AI caught.";
+}
+["lesson","seasons"].forEach(function(k){renderDoc(k,$("#"+k+"-doc"),false);countLabel(k);renderReveal(k);});
+$("#seasons-q").textContent=SEASONS_Q;
+document.addEventListener("keydown",function(e){
+  var u=e.target.closest&&e.target.closest("[data-u]");
+  if(u&&(e.key==="Enter"||e.key===" ")){e.preventDefault();toggleFlag(u.closest(".doc").id.replace("-doc",""),u.getAttribute("data-u"));}
+});
+
+/* ---------- criteria + prompts ---------- */
+var CRIT=["Alignment: the objective, activities and assessment match","Historical accuracy","Realistic for a 45-minute period","Thinking demand: students analyze and evaluate, not just recall","Access: it supports every learner","Multiple perspectives are represented","Materials are complete and usable","Engaging for 8th graders"];
+if(!state.crit)state.crit=[];
+if(!state.critCustom)state.critCustom=[];
+function renderCrit(){
+  var all=CRIT.concat(state.critCustom);
+  $("#crit-pills").innerHTML=all.map(function(c,i){
+    var on=state.crit.indexOf(c)>-1;
+    return "<label class=\"pill\"><input type=\"checkbox\" data-crit=\""+esc(c)+"\""+(on?" checked":"")+"><span class=\"ck\"></span>"+esc(c)+"</label>";
+  }).join("");
+}
+function plain(key){return DOCS[key].lines.map(function(l){return l.replace(/^(#+|>|~) /,"").replace(/\*\*/g,"");}).join("\n");}
+function phs(t){return esc(t).replace(/\[([^\]]+)\]/g,"<span class=\"ph\">[$1]</span>");}
+function selectedCrit(){var all=CRIT.concat(state.critCustom);return all.filter(function(c){return state.crit.indexOf(c)>-1;});}
+function c1Text(){
+  var cs=selectedCrit();
+  return {head:"You generated the lesson plan below. Critically evaluate it against each of these criteria:\n",
+    list:cs.length?cs.map(function(c,i){return (i+1)+". "+c;}).join("\n"):"[choose criteria above]",
+    tail:"\n\nFor each criterion: (1) rate it Meets / Partially meets / Does not meet, (2) quote the specific evidence from the lesson plan that supports your rating, (3) name the most important weakness, and (4) suggest one concrete revision. Be critical rather than generous, and don't rewrite the whole lesson. End by listing any factual claims I should verify with an outside source.\n\nLESSON PLAN:\n"+plain("lesson")};
+}
+function renderC1(flash){
+  var t=c1Text(),has=selectedCrit().length>0;
+  $("#c1-prompt").innerHTML=esc(t.head)+(has?"<mark>"+esc(t.list)+"</mark>":"<span class=\"ph\">"+esc(t.list)+"</span>")+esc(t.tail);
+  $("#copy-c1").disabled=!has;
+  $("#copy-c1").textContent=has?"Copy prompt":"Choose criteria first";
+  if(CFG.onCrit)try{CFG.onCrit(selectedCrit());}catch(e){}
+}
+var C2="I'm a 7th grader. I asked an AI chatbot a question for my science paragraph, and I want to check its answer before I use it. Don't tell me whether the answer is right or wrong. Instead, draft a simple verification plan I can follow. Include:\n1. How much checking this needs, and why.\n2. The two claims most worth checking first, and why.\n3. What might be wrong with each one (for example: a mistake or made-up fact, a one-sided view, too much to check, or the AI just agreeing with me).\n4. One way to check each claim, and a trustworthy kind of source to use.\n5. What evidence would be enough to trust or reject each claim.\nUse plain language, and explain your reasons so I can decide whether I agree with the plan.\n\nMY QUESTION:\n"+SEASONS_Q+"\n\nTHE AI'S ANSWER:\n"+plain("seasons");
+$("#c2-prompt").textContent=C2;
+renderCrit();renderC1();
+$("#crit-pills").addEventListener("change",function(e){
+  var c=e.target.getAttribute("data-crit");if(!c)return;
+  var i=state.crit.indexOf(c);
+  if(e.target.checked&&i<0)state.crit.push(c);else if(!e.target.checked&&i>-1)state.crit.splice(i,1);
+  save();renderC1();
+});
+function addCrit(){
+  var v=$("#crit-new").value.trim();if(!v)return;
+  if(CRIT.concat(state.critCustom).indexOf(v)<0)state.critCustom.push(v);
+  if(state.crit.indexOf(v)<0)state.crit.push(v);
+  $("#crit-new").value="";save();renderCrit();renderC1();
+}
+$("#crit-add").addEventListener("click",addCrit);
+$("#crit-new").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();addCrit();}});
+
+/* ---------- copy ---------- */
+function selectNode(n){try{if(n.select){n.focus();n.select();return;}var r=document.createRange();r.selectNodeContents(n);var s=getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}}
+function flash(b,msg){var o=b.getAttribute("data-o")||b.textContent;b.setAttribute("data-o",o);b.textContent=msg;b.classList.add("done");clearTimeout(b._t);b._t=setTimeout(function(){b.textContent=o;b.classList.remove("done");b.removeAttribute("data-o");},2000);}
+function copy(text,btn,node){
+  var fail=function(){if(node)selectNode(node);flash(btn,"Selected · press Ctrl/⌘ C");};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){flash(btn,"Copied ✓");},fail);else fail();}catch(e){fail();}
+}
+
+/* ---------- field kit ---------- */
+var KIT=[
+ {n:1,name:"Criteria Check",live:"Experience 1",lenses:["volume","mistakes"],
+  desc:"Evaluate an AI-generated artifact against explicit quality criteria. AI identifies evidence, weaknesses and possible revisions for each criterion, and you use professional judgment to decide whether it's fit for purpose.",
+  when:"You know what good looks like and can name the criteria.",
+  paste:"Evaluate the output below against these criteria:\n[list your criteria]\n\nFor each criterion: (1) rate it Meets / Partially meets / Does not meet, (2) quote the specific evidence from the output that supports your rating, (3) name the most important weakness, and (4) suggest one concrete revision. Be critical rather than generous. Don't rewrite the whole thing. End by listing any factual claims I should verify with an outside source.\n\nOUTPUT:\n[paste the output]",
+  guide:"I want to check whether an AI-generated [type of artifact] is good enough to use for [purpose]. Before evaluating anything, help me define the criteria. Ask me one question at a time about my purpose, my audience, and what good looks like. Once we agree on 4–6 criteria, I'll paste the artifact and you'll evaluate it against them. I'll make the final decision."},
+ {n:2,name:"Claims & Evidence Audit",lenses:["mistakes","volume"],
+  desc:"Break the output into its important claims and identify the evidence offered for each one. Flag claims that are unsupported, backed by weak or mismatched evidence, or stated with more certainty than the evidence warrants.",
+  when:"The output makes a lot of assertions and you need to know which ones are actually backed up.",
+  paste:"List every important claim in the text below as a numbered table with these columns: Claim | Evidence offered in the text | Strength of that evidence (strong / weak / mismatched / none) | Is the certainty justified? Flag any claim stated more confidently than its evidence supports. Don't add evidence of your own. Judge only what's in the text.\n\nTEXT:\n[paste the text]",
+  guide:"Help me audit the claims in a piece of text, one step at a time. First, ask me to pick the three claims that matter most for how I'll use it. Then, for each one, ask me what evidence the text offers and whether it's enough. Push back if I accept weak evidence too quickly. I'll decide which claims to keep."},
+ {n:3,name:"Challenge the Output",lenses:["syco","mistakes"],
+  desc:"Invite a skeptical review. AI identifies likely errors, questionable assumptions, weak reasoning and credible counterarguments, and you examine which challenges actually affect the decision.",
+  when:"The response feels right and you're inclined to accept it as is.",
+  paste:"Act as a skeptical expert reviewer. Critique the response below: identify likely factual errors, questionable assumptions, weak reasoning, and the strongest counterarguments. Rank the problems by how much they would change a decision based on this response. Don't soften your critique or reassure me.\n\nRESPONSE:\n[paste the response]",
+  guide:"I have an AI response I'm inclined to trust, and I want to stress-test it. Ask me what I plan to use it for, then challenge it one point at a time. After each challenge, ask me whether it changes my decision and why. Don't tell me what to conclude."},
+ {n:4,name:"What's Missing?",lenses:["bias","volume"],
+  desc:"Look for what the response leaves out: perspectives, constraints, exceptions, context and unanswered questions. Especially useful when an output looks polished and complete but may be incomplete in ways that matter.",
+  when:"The output looks finished, and you suspect the gaps matter more than the content.",
+  paste:"Review the response below for what it leaves out. Identify missing perspectives, constraints, exceptions, context, and unanswered questions that someone using it for [purpose] would need to know. For each gap, explain why it matters and how it could change the conclusion.\n\nRESPONSE:\n[paste the response]",
+  guide:"Help me find what's missing from a response that looks complete. Ask me who the audience is and what it's for. Then prompt me to consider, one at a time: whose perspective isn't represented, which exceptions or edge cases are skipped, and what a critic would say was left out. Let me name the gaps before you suggest any."},
+ {n:5,name:"Steelman Against the Answer",lenses:["bias","syco"],
+  desc:"Construct the strongest credible case against the answer, or for a competing explanation. Comparing the answer with a well-developed alternative tests how robust it is and reduces confirmation bias.",
+  when:"The answer confirms what you already believed.",
+  paste:"Build the strongest credible case against the answer below, or for the best competing explanation. Use the kind of evidence and reasoning a thoughtful expert who disagrees would use, not a straw man. Then compare the two side by side: where is the original answer stronger, and where is it weaker?\n\nANSWER:\n[paste the answer]",
+  guide:"I want to test an answer against its best alternative. First, ask me to state the answer in one sentence and why I believe it. Then help me build the strongest opposing case step by step, asking me what I know before you add anything. Finish by asking me which case holds up better and what evidence would settle it."},
+ {n:6,name:"Set the Verification Bar",lenses:["volume"],
+  desc:"Decide how much evidence and checking is appropriate before the output can be used. The bar reflects the purpose, the audience, how reversible the decision is, and the consequences of being wrong.",
+  when:"You're not sure how much checking something needs, or you're short on time.",
+  paste:"I'm planning to use the output below for [purpose] with [audience]. Help me set the verification bar. Assess what happens if it's wrong, how reversible that is, and who is affected. Then recommend a verification level (quick glance / spot check / thorough check) and the specific checks that level requires. Don't evaluate the content itself yet.\n\nOUTPUT:\n[paste the output]",
+  guide:"Help me decide how much checking an AI output needs before I use it. Ask me, one question at a time, what I'll use it for, who will see or rely on it, what happens if it's wrong, and whether I could easily undo a mistake. Then help me choose a verification level and explain it in my own words."},
+ {n:7,name:"Trace the Reasoning",lenses:["mistakes"],
+  desc:"Make the path from evidence and assumptions to conclusions visible. Examine each link to see whether the reasoning follows, whether steps are missing, and where an unsupported leap enters.",
+  when:"The conclusion sounds right, but you can't see how it got there, or parts seem to contradict each other.",
+  paste:"Map the reasoning in the response below as a numbered chain: evidence → assumption → inference → conclusion. Mark each link as Follows / Leap / Unstated assumption. Point out any place where two parts of the response contradict each other, and any step that would need to be true for the conclusion to hold.\n\nRESPONSE:\n[paste the response]",
+  guide:"Help me trace the logic of a response. Ask me to identify its main conclusion first. Then work backward with me one step at a time: What supports this? What has to be true for that to follow? Ask me to spot any leaps or contradictions before you point them out."},
+ {n:8,name:"Find the Failure Conditions",lenses:["mistakes"],
+  desc:"Identify the circumstances in which the answer, plan or recommendation would stop working. Test edge cases, hidden dependencies, boundary conditions, and changes in context.",
+  when:"You're about to act on a plan or recommendation in a real classroom or school.",
+  paste:"Here is a [plan / recommendation / answer]. Identify the conditions under which it would stop working: edge cases, hidden dependencies, boundary conditions, and changes in context (different students, setting, time, or resources). For each one, explain what would go wrong and an early warning sign to watch for.\n\n[paste it here]",
+  guide:"I want to find where a plan could break. Ask me to describe the context I'll use it in. Then walk me through “what if” scenarios one at a time: different students, less time, missing resources, unexpected reactions. After each, ask me whether the plan still holds and what I'd change."},
+ {n:9,name:"Build a Verification Plan",live:"Experience 2",lenses:["volume","mistakes","bias","syco"],
+  desc:"Use AI to help construct a verification plan while the learner stays responsible for the choices: the verification level, focus, risk, move, sufficient evidence, meaning of the results, and final judgment. The scaffold slows things down so these decisions can become independent habits.",
+  when:"The person verifying is still learning the content, such as a student.",
+  paste:"Read the AI answer below. Without judging whether it's correct, draft a verification plan that lists: the claims most worth checking and why, the risk each might carry (too much to check, a hallucination or mistake, bias, or the AI simply agreeing with me), a check for each claim, and what evidence would be enough. Present it as a draft plan I will evaluate and edit, not as conclusions.\n\nAI ANSWER:\n[paste the answer]",
+  guide:"I'm a student checking an AI answer for an assignment. Don't tell me whether the answer is right. Help me build my own plan to check it. Ask me one question at a time: how much checking this needs, which claim to check first, which risk might apply (too much to check, a mistake, bias, or the AI just agreeing with me), which check fits, and what evidence would be enough. Wait for my answer each time, and push back if my reasoning is weak.\n\nAI ANSWER:\n[paste the answer]"},
+ {n:10,name:"Triangulate",lenses:["mistakes","bias"],
+  desc:"Compare the output with multiple independent sources, methods or perspectives. Look for real agreement and disagreement, and check whether sources that look different actually rely on the same underlying evidence.",
+  when:"A claim is important enough that one source isn't enough.",
+  paste:"For the key claims in the response below, suggest three independent ways I could check each one: different source types, methods, or perspectives. Note where those sources might depend on the same original evidence, so I don't mistake repetition for confirmation. Don't confirm the claims yourself.\n\nRESPONSE:\n[paste the response]",
+  guide:"Help me triangulate a claim. Ask me what the claim is and where I first saw it. Then help me pick two or three independent sources or methods to compare, asking me to predict what each will show. After I report back, help me interpret where they agree and where they don't."},
+ {n:11,name:"Source & Support Check",lenses:["mistakes"],
+  desc:"Verify that cited or implied sources exist, are relevant and current, and actually support the claims attributed to them. Consider whether each source is authoritative enough for the purpose and stakes.",
+  when:"The response cites studies, statistics, experts or organizations.",
+  paste:"For each source cited or implied in the response below, list: the source as given, the claim it's used to support, and what I would need to confirm (that it exists, that it's current, that it actually says this, and that it's authoritative enough). Mark any source that is vague or impossible to locate. Don't assume any source is real.\n\nRESPONSE:\n[paste the response]",
+  guide:"I need to check the sources behind an AI response. Walk me through one source at a time: ask me to find it, then ask whether it exists as described, whether it actually says what the response claims, and whether it's credible enough for my purpose. Keep a running list of what I've confirmed and what's still unverified."},
+ {n:12,name:"Confidence & Uncertainty Check",lenses:["syco","mistakes"],
+  desc:"Surface what is known, uncertain, contested or still missing. Calibrate confidence to the evidence, identify the next check most likely to change the judgment, and note any limits that should accompany use.",
+  when:"You need to share or act on something and be clear about how sure you are.",
+  paste:"Sort the claims in the response below into four groups: well established, uncertain, contested, and unknown or missing. For each claim, explain why it belongs there. Then name the single next check most likely to change my judgment, and write one or two sentences I could include to explain the limits of this information.\n\nRESPONSE:\n[paste the response]",
+  guide:"Help me calibrate how confident I should be in a response. Ask me to rate my confidence in its main claims first. Then question each rating: What is it based on? What would lower it? Finish by helping me write a short note on the limits I should share with anyone who uses it."}
+];
+var KA=CFG.kitAlias||{};KIT.forEach(function(k){if(KA[k.n]){k.orig=k.name;k.name=KA[k.n].name;k.tag=KA[k.n].tag||"";}});
+var kitSel=+(state.kitSel||1),kitMode="paste",kitFilter="all";
+function renderKitList(){
+  $("#kit-list").innerHTML=KIT.map(function(k){
+    var vis=kitFilter==="all"||k.lenses.indexOf(kitFilter)>-1;
+    return "<li"+(vis?"":" hidden")+"><button class=\"kit-item"+(k.n===kitSel?" is-on":"")+"\" data-kit=\""+k.n+"\" aria-pressed=\""+(k.n===kitSel)+"\"><span class=\"kn\">"+(k.n<10?"0":"")+k.n+"</span><span><span class=\"kname\">"+esc(k.name)+"</span>"+(k.orig?"<span class=\"korig\">"+esc(k.orig)+"</span>":"")+(k.live?"<span class=\"today\">Used today · "+k.live+"</span>":"")+"</span><span class=\"kdots\">"+k.lenses.map(function(l){return "<span class=\"dot\" data-r=\""+l+"\"></span>";}).join("")+"</span></button></li>";
+  }).join("");
+}
+function renderKitDetail(){
+  var k=KIT.filter(function(x){return x.n===kitSel;})[0];
+  $("#kit-detail").innerHTML="<span class=\"kd-num\">"+(k.tag?esc(k.tag)+" · ":"")+(CFG.kitNoun||"Approach")+" "+(k.n<10?"0":"")+k.n+" of 12"+(k.orig?" · also called "+esc(k.orig):"")+(k.live?" · <span style=\"color:var(--human);font-weight:600\">Used today in "+k.live+"</span>":"")+"</span>"+
+   "<h3>"+esc(k.name)+"</h3><p class=\"kd-desc\">"+esc(k.desc)+"</p>"+
+   "<p class=\"kd-when\"><b>Use it when</b> "+esc(k.when.charAt(0).toLowerCase()+k.when.slice(1))+"</p>"+
+   "<div class=\"kd-lenses\">"+k.lenses.map(function(l){return "<span><span class=\"dot\" data-r=\""+l+"\"></span>"+RISK[l]+"</span>";}).join("")+"</div>"+
+   "<div class=\"prompt\" style=\"max-width:none\"><div class=\"prompt-bar\"><div class=\"toggle\" role=\"group\" aria-label=\"Prompt type\"><button data-mode=\"paste\" class=\""+(kitMode==="paste"?"is-on":"")+"\" aria-pressed=\""+(kitMode==="paste")+"\">"+((CFG.modeLabels||{}).paste||"Paste-ready")+"</button><button data-mode=\"guide\" class=\""+(kitMode==="guide"?"is-on":"")+"\" aria-pressed=\""+(kitMode==="guide")+"\">"+((CFG.modeLabels||{}).guide||"Guide me")+"</button></div><button class=\"btn\" data-copy=\"kit\">Copy prompt</button></div>"+
+   "<pre class=\"prompt-text\" id=\"kit-prompt\">"+phs(k[kitMode])+"</pre></div>"+
+   "<p class=\"kd-mode\">"+(kitMode==="paste"?"Paste it into any chatbot and fill in the parts in brackets.":"The AI asks you questions one at a time. You make the decisions.")+"</p>";
+}
+renderKitList();renderKitDetail();
+$("#t2").innerHTML="<option value=\"\">Choose an approach…</option>"+KIT.map(function(k){return "<option>"+esc(k.name)+"</option>";}).join("");
+
+/* ---------- release map ---------- */
+var REL=[["Set the verification level","How much checking does this deserve?","ai","you","you"],
+ ["Choose what deserves scrutiny","Which claim first, and why?","ai","menu","you"],
+ ["Identify the risk","Mistake, bias, sycophancy, volume?","ai","menu","you"],
+ ["Choose a verification move","Which check fits the concern?","ai","menu","you"],
+ ["Define sufficient evidence","What would count as enough?","ai","ai","you"],
+ ["Interpret the results","Confirmed, challenged, uncertain?","you","you","you"],
+ ["Make the final call","Trust, revise, qualify, reject, investigate?","you","you","you"]];
+var OL=CFG.own||{};var OWN={ai:["own-ai",OL.ai||"AI drafts · you evaluate"],menu:["own-menu",OL.menu||"Choose from options"],you:["own-you",OL.you||"You decide"]};var RH=CFG.relHead||["Decision","First time (today)","Practicing","Independent"];
+$("#release-table").innerHTML="<thead><tr><th scope=\"col\">"+RH[0]+"</th><th scope=\"col\" class=\"now\">"+RH[1]+"</th><th scope=\"col\">"+RH[2]+"</th><th scope=\"col\">"+RH[3]+"</th></tr></thead><tbody>"+
+ REL.map(function(r){return "<tr><th scope=\"row\">"+r[0]+"<small>"+r[1]+"</small></th>"+[2,3,4].map(function(i){return "<td"+(i===2?" class=\"now\"":"")+"><span class=\"own "+OWN[r[i]][0]+"\">"+OWN[r[i]][1]+"</span></td>";}).join("")+"</tr>";}).join("")+"</tbody>";
+
+/* ---------- persisted fields ---------- */
+$$("[data-k]").forEach(function(el){
+  var k=el.getAttribute("data-k"),v=state[k];
+  if(el.type==="radio"){if(v===el.value)el.checked=true;}
+  else if(el.type==="checkbox"){el.checked=!!v;}
+  else if(v!==undefined)el.value=v;
+  el.addEventListener(el.tagName==="TEXTAREA"||el.type==="text"?"input":"change",function(){
+    state[k]=el.type==="checkbox"?(el.checked?el.value:""):el.value;save();
+  });
+});
+/* choose-one cards */
+function openQ(q,open){
+  q.classList.toggle("is-open",open);$(".q-btn",q).setAttribute("aria-expanded",open?"true":"false");$("textarea",q).hidden=!open;
+}
+$$(".q").forEach(function(q){if($("textarea",q).value.trim())openQ(q,true);});
+
+/* ---------- clicks ---------- */
+document.addEventListener("click",function(e){
+  var t=e.target;
+  var u=t.closest("[data-u]");if(u){toggleFlag(u.closest(".doc").id.replace("-doc",""),u.getAttribute("data-u"));return;}
+  var cf=t.closest("[data-clearflags]");if(cf){var k=cf.getAttribute("data-clearflags");state["flags-"+k]=[];save();renderDoc(k,$("#"+k+"-doc"),false);countLabel(k);renderReveal(k);return;}
+  var qb=t.closest(".q-btn");if(qb){var q=qb.closest(".q"),g=q.parentNode,open=!q.classList.contains("is-open");
+    if(open&&g.getAttribute("data-single"))$$(".q",g).forEach(function(o){if(o!==q&&!$("textarea",o).value.trim())openQ(o,false);});
+    openQ(q,open);if(open)$("textarea",q).focus();return;}
+  var rv=t.closest("[data-reveal]");if(rv){var p=rv.closest(".reveal"),panel=$(".reveal-panel",p),o=panel.hidden;panel.hidden=!o;rv.setAttribute("aria-expanded",o?"true":"false");rv.textContent=o?"Hide the close read":"Show the close read";return;}
+  var cp=t.closest("[data-copy]");if(cp){var w=cp.getAttribute("data-copy");
+    if(w==="c1"){var x=c1Text();copy(x.head+x.list+x.tail,cp,$("#c1-prompt"));}
+    else if(w==="c2")copy(C2,cp,$("#c2-prompt"));
+    else if(w==="kit"){var kk=KIT.filter(function(z){return z.n===kitSel;})[0];copy(kk[kitMode],cp,$("#kit-prompt"));}
+    return;}
+  var ki=t.closest("[data-kit]");if(ki){kitSel=+ki.getAttribute("data-kit");state.kitSel=kitSel;save();renderKitList();renderKitDetail();
+    if(window.innerWidth<=820){var d=$("#kit-detail");var y=d.getBoundingClientRect().top+pageYOffset-90;scrollTo({top:y,behavior:"smooth"});}return;}
+  var md=t.closest("[data-mode]");if(md){kitMode=md.getAttribute("data-mode");renderKitDetail();return;}
+  var fl=t.closest("[data-filter]");if(fl){kitFilter=fl.getAttribute("data-filter");
+    $$("[data-filter]").forEach(function(c){var on=c===fl;c.classList.toggle("is-on",on);c.setAttribute("aria-pressed",on);});
+    var cur=KIT.filter(function(z){return z.n===kitSel;})[0];
+    if(kitFilter!=="all"&&cur.lenses.indexOf(kitFilter)<0){kitSel=KIT.filter(function(z){return z.lenses.indexOf(kitFilter)>-1;})[0].n;}
+    renderKitList();renderKitDetail();return;}
+  var go=t.closest("[data-go]");if(go){e.preventDefault();show(go.getAttribute("data-go"),true);}
+});
+
+/* ---------- notes export ---------- */
+function compile(){
+  var out=["Beyond Prompting · EdAdvance Fall AI Conference · Oct 2, 2026",""],seen={};
+  var sc=selectedCrit();if(sc.length){out.push("Experience 1 · My criteria: "+sc.join("; "));}
+  ["lesson","seasons"].forEach(function(k){
+    var f=flags(k);if(!f.length)return;
+    var texts=[];UNITS[k].forEach(function(l){l.parts.forEach(function(u){if(f.indexOf(u.id)>-1)texts.push("  • "+u.text.replace(/\*\*/g,""));});});
+    out.push((k==="lesson"?"Experience 1":"Experience 2")+" · Passages I flagged:");out=out.concat(texts);
+  });
+  $$("[data-k]").forEach(function(el){var k=el.getAttribute("data-k");if(seen[k])return;seen[k]=1;var v=state[k];
+    if(v&&String(v).trim())out.push((el.getAttribute("data-label")||k)+": "+v);});
+  return out.length>2?out.join("\n"):"Nothing here yet. Anything you type or flag in this guide will appear here.";
+}
+$("#copy-notes").addEventListener("click",function(){var t=compile();$("#all-notes").value=t;copy(t,this,$("#all-notes"));});
+$("#clear-ask").addEventListener("click",function(){$("#clear-confirm").hidden=false;this.hidden=true;});
+$("#clear-no").addEventListener("click",function(){$("#clear-confirm").hidden=true;$("#clear-ask").hidden=false;});
+$("#clear-yes").addEventListener("click",function(){
+  Object.keys(state).forEach(function(k){delete state[k];});state.crit=[];state.critCustom=[];save();
+  $$("[data-k]").forEach(function(el){if(el.type==="radio"||el.type==="checkbox")el.checked=false;else el.value="";});
+  $$(".q").forEach(function(q){openQ(q,false);});
+  ["lesson","seasons"].forEach(function(k){renderDoc(k,$("#"+k+"-doc"),false);countLabel(k);renderReveal(k);});
+  renderCrit();renderC1();$("#all-notes").value=compile();
+  $("#clear-confirm").hidden=true;$("#clear-ask").hidden=false;
+  if(CFG.onClear)try{CFG.onClear();}catch(e){}
+});
+
+/* ---------- side-rail navigation ---------- */
+var IDS=$$("[data-sec]").map(function(s){return s.id;});
+var TITLES={};$$("[data-sec]").forEach(function(s){TITLES[s.id]=s.getAttribute("data-title")||s.id;});
+var seen=state.seen||[];
+IDS.forEach(function(id,i){
+  var s=$("#"+id),pg=document.createElement("div");pg.className="pager";
+  pg.innerHTML=(i>0?"<button class=\"pg\" data-go=\""+IDS[i-1]+"\">← "+esc(TITLES[IDS[i-1]])+"</button>":"<span></span>")+
+    (i<IDS.length-1?"<button class=\"pg pg-next\" data-go=\""+IDS[i+1]+"\">"+(CFG.nextWord||"Next")+": "+esc(TITLES[IDS[i+1]])+" →</button>":"<button class=\"pg pg-next\" data-go=\""+IDS[0]+"\">Back to the start</button>");
+  s.appendChild(pg);
+});
+function show(id,scroll){
+  if(IDS.indexOf(id)<0)id=IDS[0];
+  if(seen.indexOf(id)<0){seen.push(id);state.seen=seen;save();}
+  IDS.forEach(function(s){$("#"+s).hidden=s!==id;});
+  $$("[data-nav]").forEach(function(b){var t=b.getAttribute("data-nav"),on=t===id;b.classList.toggle("is-on",on);b.classList.toggle("is-seen",!on&&seen.indexOf(t)>-1);if(on)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current");});
+  if(id===IDS[IDS.length-1])$("#all-notes").value=compile();
+  try{localStorage.setItem(NS+"-tab",id);}catch(e){}
+  if(CFG.onShow)try{CFG.onShow(id,IDS.indexOf(id),seen);}catch(e){}
+  if(scroll){var m=$("#main");var y=m.getBoundingClientRect().top+pageYOffset-(CFG.scrollPad||12);if(pageYOffset>y)scrollTo(0,Math.max(0,y));}
+}
+var start=(location.hash||"").slice(1);
+if(IDS.indexOf(start)<0){try{start=localStorage.getItem(NS+"-tab")||IDS[0];}catch(e){start=IDS[0];}}
+show(start,false);
+window.G={state:state,save:save,selectedCrit:selectedCrit,esc:esc,$:$,$$:$$,compile:compile,show:show,KIT:KIT};
+if(CFG.ready)try{CFG.ready();}catch(e){}
+})();
+
+</script>
